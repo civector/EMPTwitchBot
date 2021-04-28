@@ -1,37 +1,42 @@
-//Emp Raio Twitch bot
+//EMP Radio Twitch bot
+
 
 //modules
 var tmi = require('tmi.js');
 var fs = require('fs');
 
-//Load in username and oauth token
-var bot_username = fs.readFileSync('/home/bot/twitchbot/settings/twitch_bot_channel.txt').toString();
+//**Variable declaration and initialization**//
+//Bot Username
+var bot_username = fs.readFileSync('./settings/twitch_bot_channel.txt').toString();
 console.log("Bot channel: " + bot_username);
 
-var oauth = fs.readFileSync('/home/bot/twitchbot/settings/oauth.txt').toString();
+//Oauth Token
+var oauth = fs.readFileSync('./settings/oauth.txt').toString();
 console.log("oauth loaded");
 
 //Load lists for variable arrays
-var admins = ["civector", "capthzemp", "hellacopta_"];
+// Bot Admins
+var text = fs.readFileSync('./data/admins.json');
+console.log("here \n" + text);
+var admins = JSON.parse(text);
+console.log("Admins: " + admins);
 
-//Load text files
-var open_channels = fs.readFileSync('/home/bot/twitchbot/data/channels.txt').toString().split("\n");
-console.log("load channel to open:");
-for(i in open_channels){
-    console.log(i + ": " + open_channels[i]);
-}
+//Channels for the bot to be in
+var open_channels = fs.readFileSync('./data/channels.txt').toString().split("\n");
+console.log("Open channels: " + open_channels);
 
-//var admins = fs.readFileSync('admins.txt').toString().split("\n");
-console.log("load admins:");
-for(i in admins){
-    console.log(i + ": " + admins[i]);
-}
+//Set list for next show
+var set_list = fs.readFileSync('./data/set_list.txt').toString().split("\n");
+console.log("set list: " + set_list);
 
-var set_list = fs.readFileSync('/home/bot/twitchbot/data/set_list.txt').toString().split("\n");
-console.log("set list:");
-for(i in set_list){
-    console.log(i + ": " + set_list[i]);
-}
+//Donantion list, includes channel and link text
+var donationcsv = fs.readFileSync('./data/donations.txt').toString(); 
+var donation_list = csvJSON(donationcsv);
+console.log("Donation list: " + donation_list);
+
+//Simple Command List
+text = fs.readFileSync('./data/commands.json');
+var commands = JSON.parse(text);
 
 //tmi connection option
 var options = {
@@ -168,3 +173,29 @@ client.on('chat', function(channel, user, message, self) {
 client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
 });
+
+//var csv is the CSV file with headers
+function csvJSON(csv){
+
+  var lines=csv.split("\n");
+
+  var result = [];
+
+  var headers=lines[0].split(",");
+
+  for(var i=1;i<lines.length;i++){
+
+	  var obj = {};
+	  var currentline=lines[i].split(",");
+
+	  for(var j=0;j<headers.length;j++){
+		  obj[headers[j]] = currentline[j];
+	  }
+
+	  result.push(obj);
+
+  }
+  
+  //return result; //JavaScript object
+  return JSON.stringify(result); //JSON
+}
