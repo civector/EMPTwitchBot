@@ -1,4 +1,4 @@
 {
-{"command1", "bot response"},
-{"command2", "bot response"}
+{"command":"command1", "text":"bot response"},
+{"commnad":"command2", "text":"bot response"}
 }

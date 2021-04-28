@@ -31,12 +31,17 @@ console.log("set list: " + set_list);
 
 //Donantion list, includes channel and link text
 var donationcsv = fs.readFileSync('./data/donations.txt').toString(); 
-var donation_list = csvJSON(donationcsv);
-console.log("Donation list: " + donation_list);
+var donation_list = JSON.parse(csvJSON(donationcsv));
+
+console.log("Donation list:");
+console.log(donation_list);
+
 
 //Simple Command List
 text = fs.readFileSync('./data/commands.json');
 var commands = JSON.parse(text);
+console.log("Command list: ");
+console.log(commands);
 
 //tmi connection option
 var options = {
@@ -76,10 +81,6 @@ client.on('chat', function(channel, user, message, self) {
 
             is_mod = true;
         }
-        //console.log("|" + user.username + "|");
-        //console.log(typeof user.username);
-        //console.log("|" + admins[0] + "|");
-        //console.log(typeof admins[0]);
         if(admins.indexOf(user.username)!=-1){
             is_admin = true;
             is_mod = true;
@@ -88,25 +89,38 @@ client.on('chat', function(channel, user, message, self) {
         console.log(user.username + ": admin: " + is_admin + ", mod: " + is_mod);
 
         //*** Commands avalible to all ***
-        //Merch
-        if(message === "!empmerch"){
-            client.say(channel, "emp merch: https://teespring.com/stores/emp-radio");
+
+	//general command function
+        var command_index = commands.findIndex(function(item, i){
+                return item.command == message;
+        });
+        console.log("Command index: " + command_index);
+        if(command_index > -1){
+                console.log("Send command");
+                client.say(channel, commands[command_index].text);
         }
 
-        //Links
-        if(message === "!emplinks"){
-            client.say(channel, "EMP links: https://linktr.ee/EMPradio");
-        }
-
-        //Releases link
-        if(message === "!empreleases"){
-            client.say(channel, "Check out our latest releases: https://empradio.bandcamp.com");
-        }
 
         //help - list all avalible commands
         if(message === "!help" || message === "!h"){
             client.say(channel, "avalible commands: empmerch, emplinks, empreleases, help.\nmod only: empso \nadmin only: empjoin, emppart, emphost.");
         }
+
+	
+	//Donation Link
+	if(message === "!donate"){
+		//var channelindex = donation_list.channel.indexOf('capthzemp');
+		var index = donation_list.findIndex(function(item, i){
+			return item.channel === channel;
+		});
+		console.log("index: " + index);
+		if(index > -1){
+			client.say(channel, donation_list[index].text);
+		}else{
+			client.say(channel, "no donation link set for this channel");
+		}
+	}
+
 
         //**** Mod only Commands  ****
         //Shoutout
