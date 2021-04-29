@@ -4,6 +4,7 @@
 //modules
 var tmi = require('tmi.js');
 var fs = require('fs');
+var generalfn = require('./js/general.js');
 
 //**Variable declaration and initialization**//
 //Bot Username
@@ -17,31 +18,22 @@ console.log("oauth loaded");
 //Load lists for variable arrays
 // Bot Admins
 var text = fs.readFileSync('./data/admins.json');
-console.log("here \n" + text);
 var admins = JSON.parse(text);
-console.log("Admins: " + admins);
 
 //Channels for the bot to be in
 var open_channels = fs.readFileSync('./data/channels.txt').toString().split("\n");
-console.log("Open channels: " + open_channels);
+
 
 //Set list for next show
 var set_list = fs.readFileSync('./data/set_list.txt').toString().split("\n");
-console.log("set list: " + set_list);
 
 //Donantion list, includes channel and link text
 var donationcsv = fs.readFileSync('./data/donations.txt').toString(); 
-var donation_list = JSON.parse(csvJSON(donationcsv));
-
-console.log("Donation list:");
-console.log(donation_list);
-
+var donation_list = JSON.parse(generalfn.csvJSON(donationcsv));
 
 //Simple Command List
 text = fs.readFileSync('./data/commands.json');
 var commands = JSON.parse(text);
-console.log("Command list: ");
-console.log(commands);
 
 //tmi connection option
 var options = {
@@ -78,7 +70,6 @@ client.on('chat', function(channel, user, message, self) {
         var is_admin = false;
         //if(user.badges.broadcaster == 1 || user.mod == true){
         if(user.mod == true){
-
             is_mod = true;
         }
         if(admins.indexOf(user.username)!=-1){
@@ -86,15 +77,22 @@ client.on('chat', function(channel, user, message, self) {
             is_mod = true;
         }
 
-        console.log(user.username + ": admin: " + is_admin + ", mod: " + is_mod);
+        //create message object, with the command, and message
+        var messagebreak = message.indexOf(" ");
+        if(messagebreak >= 0){
+            var commandmessage = {"command":message.substring(1,messagebreak), "text":message.substring(message.indexOf(" ")+1)};
+        }else{
+            var commandmessage = {"command":message.substring(1), "text":""};
+        }
 
+        console.log(user.username + ": admin: " + is_admin + ", mod: " + is_mod);
         //*** Commands avalible to all ***
 
-	//general command function
+	    //general command function
         var command_index = commands.findIndex(function(item, i){
-                return item.command == message;
+                return item.command == commandmessage.command;
         });
-        console.log("Command index: " + command_index);
+
         if(command_index > -1){
                 console.log("Send command");
                 client.say(channel, commands[command_index].text);
@@ -102,30 +100,30 @@ client.on('chat', function(channel, user, message, self) {
 
 
         //help - list all avalible commands
-        if(message === "!help" || message === "!h"){
+        if(commandmessage.command === "help" || commandmessage.command === "h"){
             client.say(channel, "avalible commands: empmerch, emplinks, empreleases, help.\nmod only: empso \nadmin only: empjoin, emppart, emphost.");
         }
 
 	
-	//Donation Link
-	if(message === "!donate"){
-		//var channelindex = donation_list.channel.indexOf('capthzemp');
-		var index = donation_list.findIndex(function(item, i){
-			return item.channel === channel;
-		});
-		console.log("index: " + index);
-		if(index > -1){
-			client.say(channel, donation_list[index].text);
-		}else{
-			client.say(channel, "no donation link set for this channel");
-		}
-	}
+        //Donation Link
+        if(commandmessage.command === "donate"){
+            //var channelindex = donation_list.channel.indexOf('capthzemp');
+            var index = donation_list.findIndex(function(item, i){
+                return item.channel === channel;
+            });
+            console.log("index: " + index);
+            if(index > -1){
+                client.say(channel, donation_list[index].text);
+            }else{
+                client.say(channel, "no donation link set for this channel");
+            }
+        }
 
 
         //**** Mod only Commands  ****
         //Shoutout
-        if(message.startsWith("!empso ") && is_mod){
-            var so_channel = message.substr(7);
+        if((commandmessage.command === "empso") && is_mod){
+            var so_channel = commandmessage.text;
             if(so_channel.startsWith("@")){
                 so_channel = so_channel.substr(1);
             }
@@ -139,7 +137,7 @@ client.on('chat', function(channel, user, message, self) {
 
         //**** admin only commands ****
         //channel join
-        if(message.startsWith("!empjoin ") && is_admin){
+        if((commandmessage.command === "empjoin") && is_admin){
             var join_channel = message.substr(9);
             if(join_channel.startsWith("@")){
                 join_channel = join_channel.substr(1);
@@ -150,14 +148,13 @@ client.on('chat', function(channel, user, message, self) {
             console.log("joining " + join_channel + "...");
             client.say(channel, "joining " + join_channel + "...");
             client.join(join_channel);
-            //add in code to check if actually successful or not
-            client.say(join_channel, "Hello, I'm the EMP Radio bot. type !help for commands.");
+            //client.say(join_channel, "Hello, I'm the EMP Radio bot. type !help for commands.");
     
         }
 
         //channel leave
-        if(message.startsWith("!emppart ") && is_admin){
-            var join_channel = message.substr(9);
+        if((commandmessage.command === "emppart") && is_admin){
+            var join_channel = commandmessage.text;
             if(join_channel.startsWith("@")){
                 join_channel = join_channel.substr(1);
             }
@@ -169,8 +166,8 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //host channel
-        if(message.startsWith("!emphost ") && is_admin){
-            var join_channel = message.substr(9);
+        if((commandmessage.command === "emphost") && is_admin){
+            var join_channel = commandmessage.text;
             if(join_channel.startsWith("@")){
                 join_channel = join_channel.substr(1);
             }
@@ -179,7 +176,14 @@ client.on('chat', function(channel, user, message, self) {
             }
             client.say(channel, "hosting" + join_channel + "...");
             client.host("emp_radio", join_channel);
-        }   
+        }
+        
+        //add basic command
+        if((commandmessage.command === "empadd") && is_admin){
+            
+
+        }
+
     }
 
 });
@@ -188,28 +192,4 @@ client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
 });
 
-//var csv is the CSV file with headers
-function csvJSON(csv){
 
-  var lines=csv.split("\n");
-
-  var result = [];
-
-  var headers=lines[0].split(",");
-
-  for(var i=1;i<lines.length;i++){
-
-	  var obj = {};
-	  var currentline=lines[i].split(",");
-
-	  for(var j=0;j<headers.length;j++){
-		  obj[headers[j]] = currentline[j];
-	  }
-
-	  result.push(obj);
-
-  }
-  
-  //return result; //JavaScript object
-  return JSON.stringify(result); //JSON
-}
