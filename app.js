@@ -5,34 +5,38 @@
 var tmi = require('tmi.js');
 var fs = require('fs');
 var generalfn = require('./js/general.js');
+console.log('./settings/twitch_bot_channel.txt');
+console.log(process.cwd());
+console.log(__dirname);
+
 
 //**Variable declaration and initialization**//
 //Bot Username
-var bot_username = fs.readFileSync('./settings/twitch_bot_channel.txt').toString();
+var bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt').toString();
 console.log("Bot channel: " + bot_username);
 
 //Oauth Token
-var oauth = fs.readFileSync('./settings/oauth.txt').toString();
+var oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
 console.log("oauth loaded");
 
 //Load lists for variable arrays
 // Bot Admins
-var text = fs.readFileSync('./data/admins.json');
+var text = fs.readFileSync(__dirname + '/data/admins.json');
 var admins = JSON.parse(text);
 
 //Channels for the bot to be in
-//var open_channels = fs.readFileSync('./data/channels.txt').toString().split("\n");
-var open_channels = ["civector"];
+var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
+//var open_channels = ["civector"];
 
 //Set list for next show
-var set_list = fs.readFileSync('./data/set_list.txt').toString().split("\n");
+var set_list = fs.readFileSync(__dirname + '/data/set_list.txt').toString().split("\n");
 
 //Donantion list, includes channel and link text
-var donationcsv = fs.readFileSync('./data/donations.txt').toString(); 
+var donationcsv = fs.readFileSync(__dirname + '/data/donations.txt').toString(); 
 var donation_list = JSON.parse(generalfn.csvJSON(donationcsv));
 
 //Simple Command List
-text = fs.readFileSync('./data/commands.json');
+text = fs.readFileSync(__dirname + '/data/commands.json');
 var commands = JSON.parse(text);
 
 //tmi connection option
@@ -79,7 +83,7 @@ client.on('chat', function(channel, user, message, self) {
 
         //create message object, with the command, and message
         var messagebreak = message.indexOf(" ");
-        if(messagebreak > 1 ){
+        if(messagebreak >= 1 ){
             var commandmessage = {"command":message.substring(1,messagebreak), "text":message.substring(message.indexOf(" ")+1)};
         }else{
             var commandmessage = {"command":message.substring(1), "text":""};
@@ -129,6 +133,7 @@ client.on('chat', function(channel, user, message, self) {
             var optioncount;
             var options = [];
             var intResult;
+	    console.log('question point: ' + question_point);
 
             //there must be a question mark to work
             if(question_point > 1){
