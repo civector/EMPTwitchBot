@@ -21,8 +21,8 @@ var text = fs.readFileSync('./data/admins.json');
 var admins = JSON.parse(text);
 
 //Channels for the bot to be in
-var open_channels = fs.readFileSync('./data/channels.txt').toString().split("\n");
-
+//var open_channels = fs.readFileSync('./data/channels.txt').toString().split("\n");
+var open_channels = ["civector"];
 
 //Set list for next show
 var set_list = fs.readFileSync('./data/set_list.txt').toString().split("\n");
@@ -51,7 +51,7 @@ var options = {
     channels: open_channels
 };
 
-var client = new tmi.client(options)
+var client = new tmi.client(options);
 
 client.connect();
 
@@ -79,20 +79,20 @@ client.on('chat', function(channel, user, message, self) {
 
         //create message object, with the command, and message
         var messagebreak = message.indexOf(" ");
-        if(messagebreak >= 0){
+        if(messagebreak > 1 ){
             var commandmessage = {"command":message.substring(1,messagebreak), "text":message.substring(message.indexOf(" ")+1)};
         }else{
             var commandmessage = {"command":message.substring(1), "text":""};
         }
-
+        console.log("command: '" + commandmessage.command + "'");
         console.log(user.username + ": admin: " + is_admin + ", mod: " + is_mod);
+
         //*** Commands avalible to all ***
 
 	    //general command function
         var command_index = commands.findIndex(function(item, i){
                 return item.command == commandmessage.command;
         });
-
         if(command_index > -1){
                 console.log("Send command");
                 client.say(channel, commands[command_index].text);
@@ -101,6 +101,7 @@ client.on('chat', function(channel, user, message, self) {
 
         //help - list all avalible commands
         if(commandmessage.command === "help" || commandmessage.command === "h"){
+            console.log("help");
             client.say(channel, "avalible commands: empmerch, emplinks, empreleases, help.\nmod only: empso \nadmin only: empjoin, emppart, emphost.");
         }
 
@@ -116,6 +117,41 @@ client.on('chat', function(channel, user, message, self) {
                 client.say(channel, donation_list[index].text);
             }else{
                 client.say(channel, "no donation link set for this channel");
+            }
+        }
+
+        //Question response
+        if(commandmessage.command == ""){
+            //check for "or" and "?"
+            var strmessage = JSON.stringify(commandmessage.text);
+            var split_point = strmessage.indexOf(" or ");
+            var question_point = strmessage.indexOf("?");
+            var optioncount;
+            var options = [];
+            var intResult;
+
+            //there must be a question mark to work
+            if(question_point > 1){
+                //is there an " or "
+                if(split_point > -1){
+                    optioncount = 2;
+                    count = 0;
+                    if(question_point == -1){
+                        question_point = strmessage.length;
+                    }
+                    
+                    options[0] = strmessage.substring(1, split_point);
+                    options[1] = strmessage.substring(split_point+4, question_point);
+
+                }else{
+                    optioncount = 2;
+                    options[0] = "yes";
+                    options[1] = "no";
+                }
+                console.log(options);
+                intResult = getRndInteger(0,1);
+
+                client.say(channel, options[intResult]);
             }
         }
 
@@ -192,4 +228,6 @@ client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
 });
 
-
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) ) + min;
+} 
