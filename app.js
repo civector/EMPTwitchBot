@@ -5,6 +5,8 @@
 var tmi = require('tmi.js');
 var fs = require('fs');
 var generalfn = require('./js/general.js');
+const { setegid } = require('process');
+const { Console } = require('console');
 console.log('./settings/twitch_bot_channel.txt');
 console.log(process.cwd());
 console.log(__dirname);
@@ -25,11 +27,12 @@ var text = fs.readFileSync(__dirname + '/data/admins.json');
 var admins = JSON.parse(text);
 
 //Channels for the bot to be in
-var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
-//var open_channels = ["civector"];
+//var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
+var open_channels = ["civector", "emp_radio"];
 
 //Set list for next show
-var set_list = fs.readFileSync(__dirname + '/data/set_list.txt').toString().split("\n");
+//var set_list = fs.readFileSync(__dirname + '/data/set_list.txt').toString().split("\n");
+var set_cal = {};
 
 //Donantion list, includes channel and link text
 var donationcsv = fs.readFileSync(__dirname + '/data/donations.txt').toString(); 
@@ -38,6 +41,13 @@ var donation_list = JSON.parse(generalfn.csvJSON(donationcsv));
 //Simple Command List
 text = fs.readFileSync(__dirname + '/data/commands.json');
 var commands = JSON.parse(text);
+
+//Delcare operational variables
+var show_list_creation = false;
+var temp_show_date = new Date();
+var temp_set_list = [];
+var set_step = 0;
+var set_creator = "";
 
 //tmi connection option
 var options = {
@@ -61,6 +71,10 @@ client.connect();
 
 //**Chat Commands**
 client.on('chat', function(channel, user, message, self) {
+
+
+    if(self) return;
+
     //is message a command?
     var is_command = false;
     if(message.startsWith("!")){
@@ -68,7 +82,7 @@ client.on('chat', function(channel, user, message, self) {
     }
 
     //If message is a command, then check against commands
-    if(is_command == true){
+    if((is_command == true) || ((show_list_creation == true) && (channel == "#emp_radio"))){
         //permission level
         var is_mod = false;
         var is_admin = false;
@@ -222,6 +236,108 @@ client.on('chat', function(channel, user, message, self) {
         //add basic command
         if((commandmessage.command === "empadd") && is_admin){
             
+        }
+
+        //show list creation
+        if(((commandmessage.command === "addshow") && is_admin && (channel == "#emp_radio")) || ((show_list_creation == true) && (set_creator == user.username) && (channel == "#emp_radio"))){
+            console.log("set_step: " + set_step);
+
+            switch(set_step){
+                case 0:
+                    //1st step
+                    show_list_creation = true;
+                    set_creator = user.username;
+                    client.say(channel, "So. You wanna create a new set list. What date will it be? (MM/DD/YYYY)");
+                    console.log("1st_step: " + set_step);
+                    break;
+                case 1:
+                    if(user.username == set_creator){
+                        temp_show_date = new Date(message);
+                        console.log(temp_show_date);
+                        client.say(channel, "Ok. Now the full set list. One DJ per line. Assumes PST/PDT. 1-24 for hours please! Comma to seperate time and user, semicolom for new line (Sample: \"12, emp_radio;\")");
+                        console.log("2nd_step: " + set_step);
+                    }
+                    break;
+                case 2:
+                    if(user.username == set_creator){
+                        var data = message.trim();
+                        console.log("data: " + data);
+                        var lines = data.split(";");
+                        console.log("1st line: " + lines[0]);
+
+                        for (var i = 0; i < lines.length; i++) {
+                            var line = lines[i].trim();
+                            var show_info = line.split(",");
+                            var line_date = new Date();
+                            console.log("loop " + i);
+
+                            for (var j = 0; j < show_info.length; j++){
+                                show_info[j] = show_info[j].trim();
+                                console.log("show_info[j]: " + show_info[j]);
+                            }
+                            console.log("show_info: " + show_info[0] + " " + show_info[1]);
+                            line_date = new Date(temp_show_date);
+                            console.log("line_date original " + line_date);
+                            console.log("parseInt(show_info[0]) " + parseInt(show_info[0]));
+                            line_date.setHours(parseInt(show_info[0]));
+                            console.log("time: " + line_date);
+                            temp_set_list[i] = {"time":line_date, "channel":show_info[1]};
+                            console.log("temp_set_list " + i + ": " + temp_set_list[i].time + " " + temp_set_list[i].channel);
+                        }
+                    }
+
+                    client.say(channel, "Almost Done. Here is what I received: ");
+                    var temp_message = "";
+                    console.log("temp_set_list.length " + temp_set_list.length)
+                    for (var i = 0; i < temp_set_list.length; i++){
+                        temp_message = temp_message + temp_set_list[i].time + ", twitch.tv/" + temp_set_list[i].channel + ";\n";
+                    }
+                    console.log("temp+message: " + temp_message);
+                    client.say(channel, temp_message);
+                    client.say(channel, "Does this look correct? Y/N");
+                    console.log("3rd_step: " + set_step);
+
+                    break;
+                case 3: 
+                    if(user.username == set_creator){
+                        console.log(message[0]);
+                        var result = message[0].toLocaleLowerCase();
+                        console.log("result " + result);
+                        switch(result){
+                            case "y":
+                                //Add set to the linup
+                                set_cal = temp_set_list;
+                                temp_set_list = [];
+                                temp_show_date = new Date();
+                                set_creator = "";
+                                show_list_creation = false;
+                                set_step = 0;
+
+                                client.say(channel, "Set submitted successfully.");
+                                console.log("set_cal: " + JSON.stringify(set_cal));
+
+                                break;
+
+                            case "n":
+                                temp_set_list = [];
+                                temp_show_date = new Date();
+                                set_creator = "";
+                                show_list_creation = false;
+                                set_step = 0;
+                                client.say(channel, "That's too bad. Start over!.")
+                                break;
+
+                            default:
+                                client.say(channel, "Please answer y/n to submit set");
+                                set_step--;
+                        }
+
+                    }
+                    console.log("5th_step: " + set_step);
+                    break;
+            }
+            set_step++;
+            console.log("end of creation command");
 
         }
 
