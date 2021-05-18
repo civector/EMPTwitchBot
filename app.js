@@ -123,6 +123,17 @@ client.on('chat', function(channel, user, message, self) {
             client.say(channel, "avalible commands: empmerch, emplinks, empreleases, help.\nmod only: empso \nadmin only: empjoin, emppart, emphost.");
         }
 
+        //list basic commands
+        if(commandmessage.command === "list_basic"){
+            var command_list = "";
+
+            for (var i = 0; i < commands.length; i++) {
+                command_list = command_list + commands[i].command + ", ";
+            }
+            console.log(command_list);
+            client.say(channel, command_list);
+
+        }
 	
         //Donation Link
         if(commandmessage.command === "donate"){
@@ -235,7 +246,105 @@ client.on('chat', function(channel, user, message, self) {
         
         //add basic command
         if((commandmessage.command === "empadd") && is_admin){
-            
+            var new_command;
+            var new_response;
+            var msg_data = commandmessage.text.trim();
+
+            new_command = msg_data.substring(0, msg_data.indexOf(','));
+            new_response = msg_data.substring(msg_data.indexOf(',') + 1);
+
+            new_command = new_command.trim();
+            new_response = new_response.trim();
+
+            commands.push({"command":new_command, "text":new_response});
+            client.say(channel, new_command + " command added");
+
+            var temp_data = JSON.stringify(commands);
+
+            // write JSON string to a file
+            fs.writeFile(__dirname + '/data/commands.json', temp_data, (err) => {
+                if (err) {
+                    throw err;
+                }
+                console.log("JSON Command list is saved.");
+            });
+        }
+
+        //edit basic command
+        if((commandmessage.command === "empedit") && is_admin){
+            var edit_command;
+            var new_response;
+            var msg_data = commandmessage.text.trim();
+            var command_position = -1;
+
+            edit_command = msg_data.substring(0, msg_data.indexOf(','));
+            new_response = msg_data.substring(msg_data.indexOf(',') + 1);
+
+            edit_command = edit_command.trim();
+            new_response = new_response.trim();
+
+           //find in array
+
+           for(var i = 0, len = commands.length; i < len; i++){
+               if(commands[i].command == edit_command){
+                   command_position= i;
+                   break;
+               }
+           }
+
+            if (command_position > -1){
+                //exists within array
+                commands[command_position].text = new_response;
+                client.say(channel, edit_command + " command edited");
+
+                var temp_data = JSON.stringify(commands);
+
+                // write JSON string to a file
+                fs.writeFile(__dirname + '/data/commands.json', temp_data, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    console.log("JSON Command list is saved.");
+                });
+            }else{
+                client.say(channel, "Command does not exist. Please try again.");
+            }
+        }
+
+        //remove basic command
+        if((commandmessage.command === "empremove") && is_admin){
+            var edit_command;
+            var msg_data = commandmessage.text.trim();
+            var command_position = -1;
+
+            edit_command = msg_data;
+
+            //find in array
+
+            for(var i = 0, len = commands.length; i < len; i++){
+                if(commands[i].command == edit_command){
+                    command_position= i;
+                    break;
+                }
+            }
+
+            if (command_position > -1){
+                //exists within array
+                commands.splice(command_position, 1);
+                client.say(channel, edit_command + " command removed");
+
+                var temp_data = JSON.stringify(commands);
+
+                // write JSON string to a file
+                fs.writeFile(__dirname + '/data/commands.json', temp_data, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    console.log("JSON Command list is saved.");
+                });
+            }else{
+                client.say(channel, "Command does not exist. Please try again.");
+            }
         }
 
         //show list creation
