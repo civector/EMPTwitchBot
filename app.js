@@ -4,6 +4,7 @@
 //modules
 var tmi = require('tmi.js');
 var fs = require('fs');
+var schedule = require('node-schedule');
 var generalfn = require('./js/general.js');
 const { setegid } = require('process');
 const { Console } = require('console');
@@ -31,8 +32,20 @@ var admins = JSON.parse(text);
 var open_channels = ["civector", "emp_radio"];
 
 //Set list for next show
-//var set_list = fs.readFileSync(__dirname + '/data/set_list.txt').toString().split("\n");
-var set_cal = {};
+text = fs.readFileSync(__dirname + '/data/set_list.json');
+var set_cal = JSON.parse(text);
+
+//temp trial of scheduler
+var Set_scheduler= [];
+/*
+temp_job[0] = schedule.scheduleJob('0 58 0 18 5 0', function(){
+    console.log("This is when the job executes 0");
+});
+
+temp_job[1] = schedule.scheduleJob('30 58 0 18 5 0', function(){
+    console.log("This is when the job executes 1");
+});
+*/
 
 //Donantion list, includes channel and link text
 var donationcsv = fs.readFileSync(__dirname + '/data/donations.txt').toString(); 
@@ -347,7 +360,7 @@ client.on('chat', function(channel, user, message, self) {
             }
         }
 
-        //show list creation
+        //create a new setlist
         if(((commandmessage.command === "addshow") && is_admin && (channel == "#emp_radio")) || ((show_list_creation == true) && (set_creator == user.username) && (channel == "#emp_radio"))){
             console.log("set_step: " + set_step);
 
@@ -363,32 +376,75 @@ client.on('chat', function(channel, user, message, self) {
                     if(user.username == set_creator){
                         temp_show_date = new Date(message);
                         console.log(temp_show_date);
-                        client.say(channel, "Ok. Now the full set list. One DJ per line. Assumes PST/PDT. 1-24 for hours please! Comma to seperate time and user, semicolom for new line (Sample: \"12, emp_radio;\")");
-                        console.log("2nd_step: " + set_step);
+                        client.say(channel, "Ok. Now the full set list. Assumes PST/PDT. 1-24 for hours please! Comma to seperate time and user, semicolon for new line (Sample: \"12, emp_radio; 1, channel2\")");
                     }
                     break;
                 case 2:
                     if(user.username == set_creator){
                         var data = message.trim();
-                        console.log("data: " + data);
                         var lines = data.split(";");
-                        console.log("1st line: " + lines[0]);
 
                         for (var i = 0; i < lines.length; i++) {
                             var line = lines[i].trim();
                             var show_info = line.split(",");
                             var line_date = new Date();
-                            console.log("loop " + i);
+                            var set_hour = 0;
+                            var set_min = 0;
 
+                            //remove spaces if there to each value
                             for (var j = 0; j < show_info.length; j++){
                                 show_info[j] = show_info[j].trim();
-                                console.log("show_info[j]: " + show_info[j]);
                             }
-                            console.log("show_info: " + show_info[0] + " " + show_info[1]);
+                            //prepare time info before using
+                            console.log("time length: " + show_info[0].length);
+                            if( show_info[0].length > 2){
+                                var temp_data;
+                                var temp_time;
+                                var pm_add = 0;
+
+                                temp_data = show_info[0].toLowerCase();
+                                console.log("show_info: " + show_info[0]);
+                                console.log("temp_data: " + temp_data);
+                                if((temp_data.indexOf("pm")>-1) || (temp_data.indexOf("am")>-1)){
+                                    if(temp_data.indexOf("pm")>-1){
+                                        pm_add = 12;
+                                    }else{
+                                        pm_add = 0;
+                                    }
+                                    temp_data = temp_data.substring(0, temp_data.length-2);
+                                    temp_data = temp_data.trim();
+                                }
+                                if(temp_data.indexOf(":")>-1){
+                                    //contains ":" divider
+                                    temp_time = temp_data.split(":");
+                                    console.log("split hour " + temp_time[0]);
+                                    set_hour = parseInt(temp_time[0]);
+                                    console.log("set_hour " + set_hour);
+                                    set_min = parseInt(temp_time[1]);
+                                }else if(temp_data.length>2){
+                                    set_hour = parseInt(temp_data.substr(0,2));
+                                    set_time = parseInt(temp_data.substr(2));
+                                }else{
+                                    set_hour = parseInt(temp_data);
+                                }
+
+                                if(set_hour != 12){
+                                    console
+                                    set_hour = set_hour + pm_add;
+                                }else{
+                                    if(pm_add = 0){
+                                        set_hour = 0;
+                                    }else{
+                                        pm_add = 0;
+                                    }
+                                }
+                            }
+                            console.log("input time: " + set_hour + " " + set_min);
+                            //set time of each set
                             line_date = new Date(temp_show_date);
-                            console.log("line_date original " + line_date);
-                            console.log("parseInt(show_info[0]) " + parseInt(show_info[0]));
-                            line_date.setHours(parseInt(show_info[0]));
+                            line_date.setHours(set_hour);
+                            line_date.setMinutes(set_min);
+
                             console.log("time: " + line_date);
                             temp_set_list[i] = {"time":line_date, "channel":show_info[1]};
                             console.log("temp_set_list " + i + ": " + temp_set_list[i].time + " " + temp_set_list[i].channel);
@@ -423,8 +479,15 @@ client.on('chat', function(channel, user, message, self) {
                                 set_step = 0;
 
                                 client.say(channel, "Set submitted successfully.");
+                                createSetScheduler();
                                 console.log("set_cal: " + JSON.stringify(set_cal));
-
+                                            // write JSON string to a file
+                                fs.writeFile(__dirname + '/data/set_list.json', JSON.stringify(set_cal), (err) => {
+                                    if (err) {
+                                        throw err;
+                                    }
+                                    console.log("JSON Set list is saved.");
+                                });
                                 break;
 
                             case "n":
@@ -461,3 +524,24 @@ client.on('connected', function(address, port) {
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 } 
+
+function createSetScheduler(){
+    var set_length = set_cal.length;
+    for (var i = 0; i < set_length; i++) {
+        console.log("add " + set_cal[i].channel + " to scheduler")
+        Set_scheduler[i] = schedule.scheduleJob(set_cal[i].time, function(y){
+            console.log(JSON.stringify(y));
+
+            //have bot join channel
+            client.join(y);
+
+            //host channel
+            client.host("emp_radio", y);
+
+            //leave previous channel
+            //if(i>0){
+                //client.part(set_cal[i-1].channel);
+            //}
+        }.bind(null,set_cal[i].channel))
+    }
+}
