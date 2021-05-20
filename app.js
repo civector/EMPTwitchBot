@@ -376,7 +376,7 @@ client.on('chat', function(channel, user, message, self) {
                     if(user.username == set_creator){
                         temp_show_date = new Date(message);
                         console.log(temp_show_date);
-                        client.say(channel, "Ok. Now the full set list. Assumes PST/PDT. 1-24 for hours please! Comma to seperate time and user, semicolon for new line (Sample: \"12, emp_radio; 1, channel2\")");
+                        client.say(channel, "Ok. Now the full set list. Assumes PST/PDT. Comma to seperate time and user, semicolon for new line (Sample: \"12, emp_radio; 1, channel2\")");
                     }
                     break;
                 case 2:
