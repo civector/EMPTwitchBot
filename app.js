@@ -28,8 +28,7 @@ var text = fs.readFileSync(__dirname + '/data/admins.json');
 var admins = JSON.parse(text);
 
 //Channels for the bot to be in
-//var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
-var open_channels = ["civector", "emp_radio"];
+var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
 
 //Set list for next show
 text = fs.readFileSync(__dirname + '/data/set_list.json');
