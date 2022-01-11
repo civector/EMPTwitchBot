@@ -359,6 +359,7 @@ client.on('chat', function(channel, user, message, self) {
             }
         }
 
+
         //create a new setlist
         if(((commandmessage.command === "addshow") && is_admin && (channel == "#emp_radio")) || ((show_list_creation == true) && (set_creator == user.username) && (channel == "#emp_radio"))){
             console.log("set_step: " + set_step);
