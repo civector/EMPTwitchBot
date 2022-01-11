@@ -475,7 +475,7 @@ client.on('chat', function(channel, user, message, self) {
                                 temp_show_date = new Date();
                                 set_creator = "";
                                 show_list_creation = false;
-                                set_step = 0;
+                                set_step = -1;
 
                                 client.say(channel, "Set submitted successfully.");
                                 createSetScheduler();
@@ -494,7 +494,7 @@ client.on('chat', function(channel, user, message, self) {
                                 temp_show_date = new Date();
                                 set_creator = "";
                                 show_list_creation = false;
-                                set_step = 0;
+                                set_step = -1;
                                 client.say(channel, "That's too bad. Start over!.")
                                 break;
 
@@ -508,7 +508,7 @@ client.on('chat', function(channel, user, message, self) {
                     break;
             }
             set_step++;
-            console.log("end of creation command");
+            console.log("end of creation command and set step: " + set_step);
 
         }
 

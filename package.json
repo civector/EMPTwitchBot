@@ -10,6 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "node-schedule": "^2.0.0",
-    "tmi.js": "^1.8.3"
+    "tmi.js": "^1.8.5"
   }
 }
