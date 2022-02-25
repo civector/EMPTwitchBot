@@ -6,11 +6,11 @@ var tmi = require('tmi.js');
 var fs = require('fs');
 var schedule = require('node-schedule');
 var generalfn = require('./js/general.js');
+var cleantextfn = require('./js/cleantext.js');
+var commandsfn = require('./js/commands.js');
 const { setegid } = require('process');
 const { Console } = require('console');
-console.log('./settings/twitch_bot_channel.txt');
-console.log(process.cwd());
-console.log(__dirname);
+console.log("Initializing Twitch Bot");
 
 
 //**Variable declaration and initialization**//
@@ -33,6 +33,8 @@ var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString()
 //Set list for next show
 text = fs.readFileSync(__dirname + '/data/set_list.json');
 var set_cal = JSON.parse(text);
+var setlist_text = "";
+var is_show_live = false;
 
 //temp trial of scheduler
 var Set_scheduler= [];
@@ -49,6 +51,7 @@ temp_job[1] = schedule.scheduleJob('30 58 0 18 5 0', function(){
 //Donantion list, includes channel and link text
 var donationcsv = fs.readFileSync(__dirname + '/data/donations.txt').toString(); 
 var donation_list = JSON.parse(generalfn.csvJSON(donationcsv));
+
 
 //Simple Command List
 text = fs.readFileSync(__dirname + '/data/commands.json');
@@ -136,17 +139,18 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //list basic commands
-        if(commandmessage.command === "list_basic"){
-            var command_list = "";
+        // if(commandmessage.command === "list_basic"){
+        //     var command_list = "";
 
-            for (var i = 0; i < commands.length; i++) {
-                command_list = command_list + commands[i].command + ", ";
-            }
-            console.log(command_list);
-            client.say(channel, command_list);
+        //     for (var i = 0; i < commands.length; i++) {
+        //         command_list = command_list + commands[i].command + ", ";
+        //     }
+        //     console.log(command_list);
+        //     client.say(channel, command_list);
 
-        }
-	
+        // }
+        commandsfn.simple_reply(commandmessage.command);
+
         //Donation Link
         if(commandmessage.command === "donate"){
             //var channelindex = donation_list.channel.indexOf('capthzemp');
