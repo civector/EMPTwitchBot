@@ -35,7 +35,26 @@ text = fs.readFileSync(__dirname + '/data/set_list.json');
 var set_cal = JSON.parse(text);
 
 //temp trial of scheduler
-var Set_scheduler= [];
+var Set_scheduler = [];
+
+var purge_scheduler_time = new schedule.RecurrenceRule();
+purge_scheduler_time.hour = 4; 
+
+
+
+const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
+    //leave all current channels the bot is connected to
+    console.log("Purging connected channels...");
+    /*for (var i = 0; i < client.getChannels().length; i++) {
+        console.log("Purging connected channels...");
+        console.log("leaving" + client.getChannels(i) + "...");
+        client.part(client.getChannels(i));
+    }
+    */
+    client.disconnect();
+    //join channels in allowed list
+    client.connect();
+})
 /*
 temp_job[0] = schedule.scheduleJob('0 58 0 18 5 0', function(){
     console.log("This is when the job executes 0");
