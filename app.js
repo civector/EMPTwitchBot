@@ -133,10 +133,7 @@ client.on('chat', function(channel, user, message, self) {
 
 
         //help - list all avalible commands
-        if(commandmessage.command === "help" || commandmessage.command === "h"){
-            console.log("help");
-            client.say(channel, "avalible commands: empmerch, emplinks, empreleases, help.\nmod only: empso \nadmin only: empjoin, emppart, emphost.");
-        }
+        commandsfn.help_reply(commandmessage.command);
 
         //list basic commands
         // if(commandmessage.command === "list_basic"){
@@ -166,40 +163,7 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //Question response
-        if(commandmessage.command == ""){
-            //check for "or" and "?"
-            var strmessage = JSON.stringify(commandmessage.text);
-            var split_point = strmessage.indexOf(" or ");
-            var question_point = strmessage.indexOf("?");
-            var optioncount;
-            var options = [];
-            var intResult;
-	    console.log('question point: ' + question_point);
-
-            //there must be a question mark to work
-            if(question_point > 1){
-                //is there an " or "
-                if(split_point > -1){
-                    optioncount = 2;
-                    count = 0;
-                    if(question_point == -1){
-                        question_point = strmessage.length;
-                    }
-                    
-                    options[0] = strmessage.substring(1, split_point);
-                    options[1] = strmessage.substring(split_point+4, question_point);
-
-                }else{
-                    optioncount = 2;
-                    options[0] = "yes";
-                    options[1] = "no";
-                }
-                console.log(options);
-                intResult = getRndInteger(0,1);
-
-                client.say(channel, options[intResult]);
-            }
-        }
+        commandsfn.question_reply(commandmessage.command);
 
 
         //**** Mod only Commands  ****
