@@ -6,7 +6,6 @@ var tmi = require('tmi.js');
 var fs = require('fs');
 var schedule = require('node-schedule');
 var generalfn = require('./js/general.js');
-var request = require('request');
 const { setegid } = require('process');
 const { Console } = require('console');
 
