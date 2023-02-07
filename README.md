@@ -59,7 +59,7 @@ Set the EMP_Radio's channel to host the channel included in the message.
 Have the bot join the channel included in the message. This must be used in a channel that the bot is already in.
 
 ##### Leave Channel
-`!emppart [@channel`  
+`!emppart [@channel]`  
 Have the bot leave the channel included in the message. This must be used in a channel that the bot is already in.
 
 ##### Add basic command
@@ -81,34 +81,13 @@ The command and the message response needs to be separated with a comma.
 Removes a basic command from the bots repitoire. Requires the command to be in the message.
 [command] - the command to be removed. Must exist within the bots list.
 
-### Autohosting a show
-The bot allows for a "show" to be created; that is, to create a list of twitch channels that will be raided one after another.
-The bot will do two things; Host the current channel in the show on the EMP_Radio channel, and will join that channels chat so that it's commands can be accessed as the show goes on.
-LIMITATIONS: currently, there can only be one show saved by the bot at a time. So please, be careful about creating shows and if possible do it day of, or do it after upcoming show has happened. (having multiple shows is a planned update).
+##### Show lineup commands
+When paired with a show schedule that is an online JSON file, the bot can output a lineup and well as who is currently live.
+`!lineup`
+responds with show lineup
 
-To create a show, the command `!addshow` on the emp_radio channel. The bot will then start to ask a series of questions:
-
-- 1st Question -  "What date will it be? (MM/DD/YYYY)"
-The date the show will start on. Please keep to this format.
-
-- 2nd Question - "Ok. Now the full set list. Assumes PST/PDT. Comma to separate time and user, semicolon for new line"
-  This is where the show information is inputted. It is recommended that you prepare this list in an outside text editor (such as notepad) and then copy it in.
-  The format for each spot in the show is [time], [channel]. To separate the time and channel, a comma must be used. To separate each listing, a semicolon must be used.
-  Here is an example input:
-
-  `11:00 am, channel1;
-  12:00 pm, channel2;
-  1:00 pm, channel3;
-  2:15 pm, channel4`
-
-  Please notice that there is NOT a semicolon at the end of the input. Including one could break it.
-
-- 3rd Question - "Almost Done. Here is what I received:" - "Does this look correct?"
-This is to review the data the bot has received and how it processed it. Please double check what it thinks the show is.
-
-When done, please type a `y` for yes and a `n` for no.
-`y` will finalize the data, and create the schedule for the show.
-`n` will abort the process, and you will need to start over.
+`!nowplaying`
+responds with the channe that is currently live
 
 ## Installation of Bot
 If you wish to run this bot in a separate instance, then this is the discussion for that. This bot runs entrirely in node.js, so the machine you run this on will require that, along with a few modules. 
