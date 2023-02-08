@@ -16,7 +16,6 @@ console.log("Twitch Bot Start");
 //**Variable declaration and initialization**//
 //Bot Username
 var bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt').toString();
-console.log("Bot channel: " + bot_username);
 
 //Oauth Token
 var oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
@@ -34,21 +33,16 @@ console.log('Joining Channels: ' + open_channels);
 //Set list for next show
 const lineup_url = fs.readFileSync(__dirname + '/settings/lineup_url.txt').toString();
 
-
+//leave all current channels the bot is connected to
 var purge_scheduler_time = new schedule.RecurrenceRule();
 purge_scheduler_time.hour = 4; 
-
 const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
-    //leave all current channels the bot is connected to
     console.log("Purging connected channels...");
     client.disconnect();
     //join channels in allowed list
     client.connect();
 })
 
-//Donantion list, includes channel and link text
-var donationcsv = fs.readFileSync(__dirname + '/data/donations.txt').toString(); 
-var donation_list = JSON.parse(generalfn.csvJSON(donationcsv));
 
 //Simple Command List
 text = fs.readFileSync(__dirname + '/data/commands.json');
@@ -279,7 +273,7 @@ client.on('chat', function(channel, user, message, self) {
         }
 	
         //Lineup Response
-        if(commandmessage.command == "lineup"){
+        if(commandmessage.command == 'lineup'){
             var lineupmessage = "";
             const fetchPromise = fetch(lineup_url);
 
@@ -316,7 +310,7 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //Now playing response
-        if(commandmessage.command == 'nowplaying'){
+        if(commandmessage.command == 'nowplaying' || commandmessage.command == 'np' || commandmessage.command == 'current'){
             //get current hour and date
             var currentDate = new Date();
             currentDate.setMilliseconds(0);
@@ -417,48 +411,3 @@ client.on('connected', function(address, port) {
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 } 
-
-// function get_lineup(){
-//     console.log("Lineup URL: " + lineup_url);
-//     return new Promise((resolve) => {
-//         fetch(linup_url);
-//         // request(lineup_url, function(error, response, body){
-//         //     if (!error && response.statusCode == 200){
-//         //         resolve = JSON.parse(body);
-//         //         console.log(resolve);
-//         //     }
-//         // })
-    
-//     });
-// }
-
-// async function fetch_lineup(){
-
-//     var lineupmessage = "";
-        
-//     //update lineup
-//     console.log(lineup_url);
-//     // request(lineup_url, function(error, response, body){
-//     //     if (!error && response.statusCode == 200){
-//     //         lineupnew = await JSON.parse(body);
-//     //     }
-//     // })
-//     var lineupnew = await get_lineup();
-
-//     lineupmessage = "Todays lineup: ";
-//     console.log(lineupnew.length);
-//     console.log(lineupnew[0]);
-//     //create string to send
-//     for (var i = 0; i < lineupnew.length; i++) {
-
-//         var temp_lineup_date = new Date(lineupnew[i].Date);
-//         temp_lineup_date.setHours(lineup[i].Hour);
-//         var lineup_time = temp_lineup_date.toLocaleString("en-US", {
-//             hour: "numeric",
-//             hour12: true,
-//         });
-//         console.log(i + " : " + lineup_time + " " + lineupnew[i].Hour);
-//         lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Name + ", ";
-//     }
-//     return lineupmessage;
-// }
