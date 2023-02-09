@@ -38,10 +38,24 @@ var purge_scheduler_time = new schedule.RecurrenceRule();
 purge_scheduler_time.hour = 4; 
 const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
     console.log("Purging connected channels...");
-    client.disconnect();
+    client.disconnect()
+    .then((data) =>{
+        console.log("Disconnected successfully/no errors: " + data);
+    }).catch((err) =>{
+        //probably "No response from twitch"
+        console.log("disconnect error: " + err);
+    });
+    
     //join channels in allowed list
-    client.connect();
-})
+    client.connect()
+    .then((data) =>{
+        console.log("Connected successfully/no errors: " + data);
+    }).catch((err) =>{
+        //probably "No response from twitch"
+        console.log("connect error: " + err);
+    });
+    
+});
 
 
 //Simple Command List
@@ -66,7 +80,13 @@ var options = {
 
 var client = new tmi.client(options);
 
-client.connect();
+client.connect()
+.then((data) =>{
+    console.log("Connected successfully/no errors: " + data);
+}).catch((err) =>{
+    //probably "No response from twitch"
+    console.log("Connect error: " + err);
+});
 
 //**Chat Commands**
 client.on('chat', function(channel, user, message, self) {
@@ -131,8 +151,14 @@ client.on('chat', function(channel, user, message, self) {
             }
             console.log("joining " + join_channel + "...");
             client.say(channel, "joining " + join_channel + "...");
-            client.join(join_channel);
-            //client.say(join_channel, "Hello, I'm the EMP Radio bot. type !help for commands.");
+            client.join(join_channel)
+            .then((data) =>{
+                //joined successfully
+                console.log("Join Successful/no errors: " + data);
+            }).catch((err) =>{
+                //probably "No response from twitch"
+                console.log("Join error: " + data);
+            });
     
         }
 
@@ -146,7 +172,14 @@ client.on('chat', function(channel, user, message, self) {
                 join_channel = join_channel.substr(0, join_channel.indexOf(" "));
             }
             client.say(channel, "leaving " + join_channel + "...");
-            client.part(join_channel);
+            client.part(join_channel)
+            .then((data) =>{
+                //left successfully
+                console.log("Leave Successful/no errors: " + data);
+            }).catch((err) =>{
+                //probably "No response from twitch"
+                console.log("Leave error: " + data);
+            });;
         }
         
         //add basic command
@@ -254,6 +287,10 @@ client.on('chat', function(channel, user, message, self) {
 
         //*** Commands avalible to all ***
 
+        //Check if bot is mod in channel
+        if(commandmessage.command == 'is_mod'){
+            
+        }
         //help - list all avalible commands
         if(commandmessage.command === "help" || commandmessage.command === "h"){
             console.log("help");
