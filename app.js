@@ -20,9 +20,14 @@ var bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt
 //Oauth Token
 var oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
 
+//Load API Info
+var text = fs.readFileSync(__dirname + '/settings/api_info.json');
+const twitchAPI = JSON.parse(text);
+console.log('twitch api: ' + twitchAPI.client_id);
+
 //Load lists for variable arrays
 // Bot Admins
-var text = fs.readFileSync(__dirname + '/data/admins.json');
+text = fs.readFileSync(__dirname + '/data/admins.json');
 var admins = JSON.parse(text);
 console.log('bot admins: ' + admins);
 
@@ -288,9 +293,72 @@ client.on('chat', function(channel, user, message, self) {
         //*** Commands avalible to all ***
 
         //Check if bot is mod in channel
-        if(commandmessage.command == 'is_mod'){
+        if(commandmessage.command == 'ismod'){
             
         }
+
+        if(commandmessage.command == 'islive'){
+            var handle = commandmessage.text;
+            var getstreamurl = "https://api.twitch.tv/helix/streams";
+            var boollive = false;
+            var reply = "";
+            var responsetype = "";
+            
+            //clean handle text
+            if(handle.startsWith("@")){
+                handle = handle.substr(1);
+            }
+            if(handle.includes(" ")){
+                handle = handle.substr(0, handle.indexOf(" "));
+            }
+
+            getstreamurl = getstreamurl + "?user_login=" + handle;
+            fetch(getstreamurl, {
+                method: "GET",
+                headers:{
+                    "Authorization": twitchAPI.token,
+                    "Client-Id": twitchAPI.client_id,
+                }
+            })
+            .then((response) => {
+                responsetype = response.status;
+                if (!response.ok) {
+                    if(response.status == 400){
+                        reply = "No account exists for: " + handle;
+                        client.say(channel, reply);
+                    }
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                console.log("islive status code: " + response.status);
+                return response.json();
+            })
+            .then((streamers) => {
+                console.log(streamers);
+                if(streamers.data.length){
+                    console.log("not Empty array");
+                    if ((handle == streamers.data[0].user_login) && (streamers.data[0].type == "live")){
+                        boollive = true;
+                    }
+
+                }
+                console.log(boollive);
+                if(boollive){
+                    reply = "@" + handle + " is live!";
+                }else{
+                    reply = "@" + handle + " is knowhere to be seen";
+                }
+                client.say(channel, reply);
+
+            })
+            .catch((error) => {
+                console.error(`Could not get products: ${error}`);
+            });
+            
+
+            
+
+        }
+
         //help - list all avalible commands
         if(commandmessage.command === "help" || commandmessage.command === "h"){
             console.log("help");
