@@ -27,6 +27,9 @@ All commands start with an exclamation point. Brackets represent user input; do 
 These "basic" commands just have a simple text response. They are not being listed here because they can be added, edited, and removed by admins. How that is done will be listed below. To show the current commands of the bot, use the command:
 !list_basic
 
+##### Check if a Channel is Live
+`!islive [@channel]
+Checks if a channel is broadcsting and responds accordingly.
 
 ##### Help
 `!help` or `!h`  
@@ -40,7 +43,7 @@ If set up for the particular channel, the bot will respond with a link or inform
 `! [question]?`
 or
 `! [Option 1] or [Option 1]?`  
-Must have a space a first character. If you ask a question, the bot will respond with a yes or no. If the command lists two options, will reply with one or the two options. 
+Must have a space a first character. If you ask a question, the bot will respond with a yes or no. If the command lists two options, will reply with one of the two options. 
 
 #### Commands only for Moderators
 
