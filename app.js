@@ -20,14 +20,9 @@ var bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt
 //Oauth Token
 var oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
 
-//Load API Info
-var text = fs.readFileSync(__dirname + '/settings/api_info.json');
-const twitchAPI = JSON.parse(text);
-console.log('twitch api: ' + twitchAPI.client_id);
-
 //Load lists for variable arrays
 // Bot Admins
-text = fs.readFileSync(__dirname + '/data/admins.json');
+var text = fs.readFileSync(__dirname + '/data/admins.json');
 var admins = JSON.parse(text);
 console.log('bot admins: ' + admins);
 
@@ -37,6 +32,20 @@ console.log('Joining Channels: ' + open_channels);
 
 //Set list for next show
 const lineup_url = fs.readFileSync(__dirname + '/settings/lineup_url.txt').toString();
+
+//API variables and tokens
+text = fs.readFileSync(__dirname + '/settings/token.json');
+var token_info = JSON.parse(text);
+
+text = fs.readFileSync(__dirname + '/settings/client_info.json');
+var client_info = JSON.parse(text);
+
+var  APIcred = {
+    client_id: client_info.client_id,
+    token: "Bearer " + token_info.access_token
+};
+
+//check 
 
 //leave all current channels the bot is connected to
 var purge_scheduler_time = new schedule.RecurrenceRule();
@@ -297,12 +306,14 @@ client.on('chat', function(channel, user, message, self) {
             
         }
 
+        //Check if channel is currently streaming
         if(commandmessage.command == 'islive'){
             var handle = commandmessage.text;
             var getstreamurl = "https://api.twitch.tv/helix/streams";
             var boollive = false;
             var reply = "";
             var responsetype = "";
+            var repeatcount = 0;
             
             //clean handle text
             if(handle.startsWith("@")){
@@ -313,11 +324,12 @@ client.on('chat', function(channel, user, message, self) {
             }
 
             getstreamurl = getstreamurl + "?user_login=" + handle;
+
             fetch(getstreamurl, {
                 method: "GET",
                 headers:{
-                    "Authorization": twitchAPI.token,
-                    "Client-Id": twitchAPI.client_id,
+                    "Authorization": APIcred.token,
+                    "Client-Id": APIcred.client_id,
                 }
             })
             .then((response) => {
@@ -329,13 +341,10 @@ client.on('chat', function(channel, user, message, self) {
                     }
                     throw new Error(`HTTP error: ${response.status}`);
                 }
-                console.log("islive status code: " + response.status);
                 return response.json();
             })
             .then((streamers) => {
-                console.log(streamers);
                 if(streamers.data.length){
-                    console.log("not Empty array");
                     if ((handle == streamers.data[0].user_login) && (streamers.data[0].type == "live")){
                         boollive = true;
                     }
@@ -345,18 +354,26 @@ client.on('chat', function(channel, user, message, self) {
                 if(boollive){
                     reply = "@" + handle + " is live!";
                 }else{
-                    reply = "@" + handle + " is knowhere to be seen";
+                    reply = "@" + handle + " is nowhere to be seen";
                 }
                 client.say(channel, reply);
 
             })
             .catch((error) => {
                 console.error(`Could not get products: ${error}`);
+
+                if(responsetype === 401){
+                    (async() => {
+                        var temp_token = await getToken(token_info.refresh_token);
+                        token_info = temp_token;
+                        APIcred.token = "Bearer " + token_info.access_token;
+                        client.say(channel, "/me *Yawns*");
+                        client.say(channel, "....Huh? Can you say that command again? I was taking a nap");
+                    })()
+                    
+                }
+                
             });
-            
-
-            
-
         }
 
         //help - list all avalible commands
@@ -516,3 +533,83 @@ client.on('connected', function(address, port) {
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 } 
+
+async function getToken(refresh_tkn){
+    //Load API Info
+    var text = fs.readFileSync(__dirname + '/settings/client_info.json');
+    var twitchAPI = JSON.parse(text);
+    var urltext= "https://id.twitch.tv/oauth2/token";
+    var token_headers= {
+        "Content-Type": "application/x-www-form-urlencoded"
+    };
+    var datatext = [ "grant_type=refresh_token&refresh_token=" + refresh_tkn + "&client_id=" + twitchAPI.client_id  + "&client_secret=" + twitchAPI.client_secret ];
+
+    return await fetch(urltext, {
+        method: "POST",
+        headers: token_headers,
+        body: datatext
+    })
+    .then((response) => {
+        responsetype = response.status;
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then((data) => {
+        var temp_data = JSON.stringify(data);
+        fs.writeFile(__dirname + '/settings/token.json', temp_data, (err) => {
+            if (err) {
+                throw err;
+            }
+        });
+        console.log("Created new token");
+        return data;
+    })
+    .catch((error) => {
+        console.error(`Could not get products: ${error}`);
+    });
+}
+
+async function testAPI(header_info){
+    var status_code = 0;
+    var functionbool = false;
+    var testurl = "https://api.twitch.tv/helix/users?login=emp_radio"
+    console.log("Test function!");
+
+    console.log("headerinfo:");
+    console.log("token " + header_info.token);
+    console.log("client_id " +header_info.client_id);
+
+
+
+    fetch(testurl, {
+        method: "GET",
+        headers:{
+            "Authorization": header_info.token,
+            "Client-Id": header_info.client_id,
+        }
+    })
+    .then((response) => {
+        status_code = response.status;
+        console.log("Status: " + status_code);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        console.log("islive status code: " + response.status);
+        return response.json();
+    })
+    .then((body)=>{
+        console.log(body);
+    })
+    .catch((error) => {
+        console.error(`Could not get products: ${error}`);
+    });
+
+    console.log(status_code);
+    if(status_code == 200){
+        functionbool = true;
+    }
+    return status_code;
+}
