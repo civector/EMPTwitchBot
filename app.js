@@ -1,24 +1,27 @@
-//EMP Radio Twitch bot
-
+/*
+EMP Radio Twitch bot
+website: emp.cx
+Author: Civector
+*/
 
 //modules
 var tmi = require('tmi.js');
-var fs = require('fs');
 var schedule = require('node-schedule');
-var generalfn = require('./js/general.js');
+var fs = require('fs');
 const { setegid } = require('process');
 const { Console } = require('console');
+
+//local file "modules"
 
 //Start Console Message
 console.log("Twitch Bot Start");
 
-
 //**Variable declaration and initialization**//
 //Bot Username
-var bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt').toString();
+const bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt').toString();
 
 //Oauth Token
-var oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
+const oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
 
 //Load lists for variable arrays
 // Bot Admins
@@ -30,8 +33,12 @@ console.log('bot admins: ' + admins);
 var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
 console.log('Joining Channels: ' + open_channels);
 
-//Set list for next show
+//Set list url for upcoming shows
 const lineup_url = fs.readFileSync(__dirname + '/settings/lineup_url.txt').toString();
+
+//Simple Command List
+text = fs.readFileSync(__dirname + '/data/commands.json');
+var commands = JSON.parse(text);
 
 //API variables and tokens
 text = fs.readFileSync(__dirname + '/settings/token.json');
@@ -45,9 +52,8 @@ var  APIcred = {
     token: "Bearer " + token_info.access_token
 };
 
-//check 
-
-//leave all current channels the bot is connected to
+//Purge function; to make sure the bot isn't in channels permanently
+//leave all current channels the bot is connected to, rejoins the channels in whitelist
 var purge_scheduler_time = new schedule.RecurrenceRule();
 purge_scheduler_time.hour = 4; 
 const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
@@ -72,11 +78,7 @@ const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
 });
 
 
-//Simple Command List
-text = fs.readFileSync(__dirname + '/data/commands.json');
-var commands = JSON.parse(text);
-
-//tmi connection option
+//tmi.js connection option
 var options = {
     options: {
         debug: true
@@ -105,21 +107,21 @@ client.connect()
 //**Chat Commands**
 client.on('chat', function(channel, user, message, self) {
 
-
+    //messages from the bot are ignored
     if(self) return;
     
-    //is message a command?
+    //does the message have the command character (an exclamation point)?
     var is_command = false;
     if(message.startsWith("!")){
         is_command = true;
     }
 
-    //If message is a command, then check against commands
+    //If the message is formatted as a command, then check against commands
     if(is_command == true){
         //permission level calculation
         var is_mod = false;
         var is_admin = false;
-        //if(user.badges.broadcaster == 1 || user.mod == true){
+
         if(user.mod == true){
             is_mod = true;
         }
@@ -138,7 +140,10 @@ client.on('chat', function(channel, user, message, self) {
         console.log("command: '" + commandmessage.command + "'");
         console.log(user.username + ": admin: " + is_admin + ", mod: " + is_mod);
 
+        //Check against commands
+
         //**** Mod only Commands  ****
+
         //Shoutout
         if((commandmessage.command === "empso") && is_mod){
             var so_channel = commandmessage.text;
@@ -529,6 +534,8 @@ client.on('chat', function(channel, user, message, self) {
 client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
 });
+
+//**Functions**
 
 function getRndInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
