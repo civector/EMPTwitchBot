@@ -20,15 +20,12 @@ This is a special permission level intended for bot behavior across the twitch p
 
 
 ### Current Commands
-All commands start with an exclamation point. Brackets represent user input; do not actually include the brackets
+All commands start with an exclamation point. Brackets represent user input; do not actually include the brackets in use.
 
 #### Commands open to all users
-##### Basic Commands
-These "basic" commands just have a simple text response. They are not being listed here because they can be added, edited, and removed by admins. How that is done will be listed below. To show the current commands of the bot, use the command:
-!list_basic
 
 ##### Check if a Channel is Live
-`!islive [@channel]
+`!islive [@channel]`
 Checks if a channel is broadcsting and responds accordingly.
 
 ##### Help
@@ -65,6 +62,10 @@ Have the bot join the channel included in the message. This must be used in a ch
 `!emppart [@channel]`  
 Have the bot leave the channel included in the message. This must be used in a channel that the bot is already in.
 
+##### Basic Commands
+These "basic" commands just have a simple text response. They are not being listed here because they can be added, edited, and removed by admins. How that is done will be listed below. To show the current commands of the bot, use the command:
+`!list_basic`
+
 ##### Add basic command
 `!empadd [newcommand], [message response]`  
 Adds a command that the bot can respond to. The user input needs to include two parts;
@@ -90,7 +91,7 @@ When paired with a show schedule that is an online JSON file, the bot can output
 responds with show lineup
 
 `!nowplaying`
-responds with the channe that is currently live
+responds with the channel that is currently live in the show shcedule. If there is no show currently going, then it will respond that no one is live.
 
 ## Installation of Bot
 If you wish to run this bot in a separate instance, then this is the discussion for that. This bot runs entrirely in node.js, so the machine you run this on will require that, along with a few modules. 
