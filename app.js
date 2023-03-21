@@ -12,45 +12,10 @@ const { setegid } = require('process');
 const { Console } = require('console');
 
 //local file "modules"
+const general = require('./js/general');
+const api_func = require('./js/api_func');
+const chat_cmds = require('./js/chat_cmds');
 
-//Start Console Message
-console.log("Twitch Bot Start");
-
-//**Variable declaration and initialization**//
-//Bot Username
-const bot_username = fs.readFileSync(__dirname + '/settings/twitch_bot_channel.txt').toString();
-
-//Oauth Token
-const oauth = fs.readFileSync(__dirname + '/settings/oauth.txt').toString();
-
-//Load lists for variable arrays
-// Bot Admins
-var text = fs.readFileSync(__dirname + '/data/admins.json');
-var admins = JSON.parse(text);
-console.log('bot admins: ' + admins);
-
-//Channels for the bot to be in
-var open_channels = fs.readFileSync(__dirname + '/data/channels.txt').toString().split("\n");
-console.log('Joining Channels: ' + open_channels);
-
-//Set list url for upcoming shows
-const lineup_url = fs.readFileSync(__dirname + '/settings/lineup_url.txt').toString();
-
-//Simple Command List
-text = fs.readFileSync(__dirname + '/data/commands.json');
-var commands = JSON.parse(text);
-
-//API variables and tokens
-text = fs.readFileSync(__dirname + '/settings/token.json');
-var token_info = JSON.parse(text);
-
-text = fs.readFileSync(__dirname + '/settings/client_info.json');
-var client_info = JSON.parse(text);
-
-var  APIcred = {
-    client_id: client_info.client_id,
-    token: "Bearer " + token_info.access_token
-};
 
 //Purge function; to make sure the bot isn't in channels permanently
 //leave all current channels the bot is connected to, rejoins the channels in whitelist
@@ -77,7 +42,6 @@ const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
     
 });
 
-
 //tmi.js connection option
 var options = {
     options: {
@@ -88,14 +52,14 @@ var options = {
         reconnect: true
     },
     identity: {
-        username: bot_username,
-        password: oauth
+        username: chat_cmds.bot_username,
+        password: chat_cmds.oauth
     },
-    channels: open_channels
+    channels: chat_cmds.open_channels
 };
 
+//begin chat connection 
 var client = new tmi.client(options);
-
 client.connect()
 .then((data) =>{
     console.log("Connected successfully/no errors: " + data);
@@ -119,55 +83,35 @@ client.on('chat', function(channel, user, message, self) {
     //If the message is formatted as a command, then check against commands
     if(is_command == true){
         //permission level calculation
-        var is_mod = false;
+        /*var is_mod = false;
         var is_admin = false;
 
         if(user.mod == true){
             is_mod = true;
         }
-        if(admins.indexOf(user.username)!=-1){
+        if(chat_cmds.admins.indexOf(user.username)!=-1){
             is_admin = true;
             is_mod = true;
         }
+        */
+        
+        var perm  = chat_cmds.get_permissions(user);
 
         //create message object, with the command, and message
-        var messagebreak = message.indexOf(" ");
-        if(messagebreak >= 1 ){
-            var commandmessage = {"command":message.substring(1,messagebreak), "text":message.substring(message.indexOf(" ")+1)};
-        }else{
-            var commandmessage = {"command":message.substring(1), "text":""};
-        }
-        console.log("command: '" + commandmessage.command + "'");
-        console.log(user.username + ": admin: " + is_admin + ", mod: " + is_mod);
+        var commandmessage = general.create_command_object(message);
 
-        //Check against commands
-
-        //**** Mod only Commands  ****
-
+        //**** mod only commands ****
         //Shoutout
-        if((commandmessage.command === "empso") && is_mod){
-            var so_channel = commandmessage.text;
-            if(so_channel.startsWith("@")){
-                so_channel = so_channel.substr(1);
-            }
-            if(so_channel.includes(" ")){
-                so_channel = so_channel.substr(0, so_channel.indexOf(" "))
-            }
+        if((commandmessage.command === "empso") && perm.moderator){
+            let so_channel = general.clean_handle(commandmessage.text);
             client.say(channel, "Check out @" + so_channel + "! https://twitch.tv/" + so_channel);
-
         }
-
 
         //**** admin only commands ****
         //channel join
-        if((commandmessage.command === "empjoin") && is_admin){
-            var join_channel = message.substr(9);
-            if(join_channel.startsWith("@")){
-                join_channel = join_channel.substr(1);
-            }
-            if(join_channel.includes(" ")){
-                join_channel = join_channel.substr(0, join_channel.indexOf(" "));
-            }
+        if((commandmessage.command === "empjoin") && perm.admin){
+            var join_channel = general.clean_handle(commandmessage.text);
+
             console.log("joining " + join_channel + "...");
             client.say(channel, "joining " + join_channel + "...");
             client.join(join_channel)
@@ -182,14 +126,9 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //channel leave
-        if((commandmessage.command === "emppart") && is_admin){
-            var join_channel = commandmessage.text;
-            if(join_channel.startsWith("@")){
-                join_channel = join_channel.substr(1);
-            }
-            if(join_channel.includes(" ")){
-                join_channel = join_channel.substr(0, join_channel.indexOf(" "));
-            }
+        if((commandmessage.command === "emppart") && perm.admin){
+            var join_channel = general.clean_handle(commandmessage.text);
+
             client.say(channel, "leaving " + join_channel + "...");
             client.part(join_channel)
             .then((data) =>{
@@ -202,7 +141,7 @@ client.on('chat', function(channel, user, message, self) {
         }
         
         //add basic command
-        if((commandmessage.command === "empadd") && is_admin){
+        if((commandmessage.command === "empadd") && perm.admin){
             var new_command;
             var new_response;
             var msg_data = commandmessage.text.trim();
@@ -213,10 +152,10 @@ client.on('chat', function(channel, user, message, self) {
             new_command = new_command.trim();
             new_response = new_response.trim();
 
-            commands.push({"command":new_command, "text":new_response});
+            chat_cmds.simple_commands.push({"command":new_command, "text":new_response});
             client.say(channel, new_command + " command added");
 
-            var temp_data = JSON.stringify(commands);
+            var temp_data = JSON.stringify(chat_cmds.simple_commands);
 
             // write JSON string to a file
             fs.writeFile(__dirname + '/data/commands.json', temp_data, (err) => {
@@ -228,7 +167,7 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //edit basic command
-        if((commandmessage.command === "empedit") && is_admin){
+        if((commandmessage.command === "empedit") && perm.admin){
             var edit_command;
             var new_response;
             var msg_data = commandmessage.text.trim();
@@ -242,8 +181,8 @@ client.on('chat', function(channel, user, message, self) {
 
            //find in array
 
-           for(var i = 0, len = commands.length; i < len; i++){
-               if(commands[i].command == edit_command){
+           for(var i = 0, len = chat_cmds.simple_commands.length; i < len; i++){
+               if(chat_cmds.simple_commands[i].command == edit_command){
                    command_position= i;
                    break;
                }
@@ -251,10 +190,10 @@ client.on('chat', function(channel, user, message, self) {
 
             if (command_position > -1){
                 //exists within array
-                commands[command_position].text = new_response;
+                chat_cmds.simple_commands[command_position].text = new_response;
                 client.say(channel, edit_command + " command edited");
 
-                var temp_data = JSON.stringify(commands);
+                var temp_data = JSON.stringify(chat_cmds.simple_commands);
 
                 // write JSON string to a file
                 fs.writeFile(__dirname + '/data/commands.json', temp_data, (err) => {
@@ -269,7 +208,7 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //remove basic command
-        if((commandmessage.command === "empremove") && is_admin){
+        if((commandmessage.command === "empremove") && perm.admin){
             var edit_command;
             var msg_data = commandmessage.text.trim();
             var command_position = -1;
@@ -278,8 +217,8 @@ client.on('chat', function(channel, user, message, self) {
 
             //find in array
 
-            for(var i = 0, len = commands.length; i < len; i++){
-                if(commands[i].command == edit_command){
+            for(var i = 0, len = chat_cmds.simple_commands.length; i < len; i++){
+                if(chat_cmds.simple_commands[i].command == edit_command){
                     command_position= i;
                     break;
                 }
@@ -287,10 +226,10 @@ client.on('chat', function(channel, user, message, self) {
 
             if (command_position > -1){
                 //exists within array
-                commands.splice(command_position, 1);
+                chat_cmds.simple_commands.splice(command_position, 1);
                 client.say(channel, edit_command + " command removed");
 
-                var temp_data = JSON.stringify(commands);
+                var temp_data = JSON.stringify(chat_cmds.simple_commands);
 
                 // write JSON string to a file
                 fs.writeFile(__dirname + '/data/commands.json', temp_data, (err) => {
@@ -304,37 +243,29 @@ client.on('chat', function(channel, user, message, self) {
             }
         }
 
-        //*** Commands avalible to all ***
+        //**** Commands avalible to all ****
 
         //Check if bot is mod in channel
         if(commandmessage.command == 'ismod'){
-            
+            var chat_permissions = chat_cmds.get_permissions(user);
         }
 
         //Check if channel is currently streaming
         if(commandmessage.command == 'islive'){
-            var handle = commandmessage.text;
+            var handle = general.clean_handle(commandmessage.text);
             var getstreamurl = "https://api.twitch.tv/helix/streams";
             var boollive = false;
             var reply = "";
             var responsetype = "";
             var repeatcount = 0;
-            
-            //clean handle text
-            if(handle.startsWith("@")){
-                handle = handle.substr(1);
-            }
-            if(handle.includes(" ")){
-                handle = handle.substr(0, handle.indexOf(" "));
-            }
 
             getstreamurl = getstreamurl + "?user_login=" + handle;
 
             fetch(getstreamurl, {
                 method: "GET",
                 headers:{
-                    "Authorization": APIcred.token,
-                    "Client-Id": APIcred.client_id,
+                    "Authorization": api_func.APIcred.token,
+                    "Client-Id": api_func.APIcred.client_id,
                 }
             })
             .then((response) => {
@@ -369,9 +300,9 @@ client.on('chat', function(channel, user, message, self) {
 
                 if(responsetype === 401){
                     (async() => {
-                        var temp_token = await getToken(token_info.refresh_token);
-                        token_info = temp_token;
-                        APIcred.token = "Bearer " + token_info.access_token;
+                        var temp_token = await api_func.getToken(api_func.token_info.refresh_token);
+                        api_func.token_info = temp_token;
+                        api_func.APIcred.token = "Bearer " + api_func.token_info.access_token;
                         client.say(channel, "/me *Yawns*");
                         client.say(channel, "....Huh? Can you say that command again? I was taking a nap");
                     })()
@@ -391,7 +322,7 @@ client.on('chat', function(channel, user, message, self) {
         if(commandmessage.command === "list_basic"){
             var command_list = "";
 
-            for (var i = 0; i < commands.length; i++) {
+            for (var i = 0; i < chat_cmds.simple_commands.length; i++) {
                 command_list = command_list + commands[i].command + ", ";
             }
             console.log(command_list);
@@ -511,112 +442,23 @@ client.on('chat', function(channel, user, message, self) {
                     options[1] = "no";
                 }
                 console.log(options);
-                intResult = getRndInteger(0,1);
+                intResult = general.getRndInteger(0,1);
 
                 client.say(channel, options[intResult]);
             }
         }
 
         //general command function
-        var command_index = commands.findIndex(function(item, i){
+        var command_index = chat_cmds.simple_commands.findIndex(function(item, i){
                 return item.command == commandmessage.command;
         });
         if(command_index > -1){
                 console.log("Send command");
-                client.say(channel, commands[command_index].text);
+                client.say(channel, chat_cmds.simple_commands[command_index].text);
         }
-
-
     }
-
 });
 
 client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
 });
-
-//**Functions**
-
-function getRndInteger(min, max) {
-  return Math.floor(Math.random() * (max - min + 1) ) + min;
-} 
-
-async function getToken(refresh_tkn){
-    //Load API Info
-    var text = fs.readFileSync(__dirname + '/settings/client_info.json');
-    var twitchAPI = JSON.parse(text);
-    var urltext= "https://id.twitch.tv/oauth2/token";
-    var token_headers= {
-        "Content-Type": "application/x-www-form-urlencoded"
-    };
-    var datatext = [ "grant_type=refresh_token&refresh_token=" + refresh_tkn + "&client_id=" + twitchAPI.client_id  + "&client_secret=" + twitchAPI.client_secret ];
-
-    return await fetch(urltext, {
-        method: "POST",
-        headers: token_headers,
-        body: datatext
-    })
-    .then((response) => {
-        responsetype = response.status;
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then((data) => {
-        var temp_data = JSON.stringify(data);
-        fs.writeFile(__dirname + '/settings/token.json', temp_data, (err) => {
-            if (err) {
-                throw err;
-            }
-        });
-        console.log("Created new token");
-        return data;
-    })
-    .catch((error) => {
-        console.error(`Could not get products: ${error}`);
-    });
-}
-
-async function testAPI(header_info){
-    var status_code = 0;
-    var functionbool = false;
-    var testurl = "https://api.twitch.tv/helix/users?login=emp_radio"
-    console.log("Test function!");
-
-    console.log("headerinfo:");
-    console.log("token " + header_info.token);
-    console.log("client_id " +header_info.client_id);
-
-
-
-    fetch(testurl, {
-        method: "GET",
-        headers:{
-            "Authorization": header_info.token,
-            "Client-Id": header_info.client_id,
-        }
-    })
-    .then((response) => {
-        status_code = response.status;
-        console.log("Status: " + status_code);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-        console.log("islive status code: " + response.status);
-        return response.json();
-    })
-    .then((body)=>{
-        console.log(body);
-    })
-    .catch((error) => {
-        console.error(`Could not get products: ${error}`);
-    });
-
-    console.log(status_code);
-    if(status_code == 200){
-        functionbool = true;
-    }
-    return status_code;
-}
