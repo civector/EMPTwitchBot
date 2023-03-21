@@ -2,6 +2,7 @@
 EMP Radio Twitch bot
 website: emp.cx
 Author: Civector
+Testing if this will change anything
 */
 
 //modules
