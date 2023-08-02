@@ -16,6 +16,7 @@ const { Console } = require('console');
 const general = require('./js/general');
 const api_func = require('./js/api_func');
 const chat_cmds = require('./js/chat_cmds');
+const scheduling = require('./js/scheduling');
 
 
 //Purge function; to make sure the bot isn't in channels permanently
@@ -334,7 +335,7 @@ client.on('chat', function(channel, user, message, self) {
         //Lineup Response
         if(commandmessage.command == 'lineup'){
             var lineupmessage = "";
-            const fetchPromise = fetch(lineup_url);
+            const fetchPromise = fetch(scheduling.lineup_url);
 
             fetchPromise
             .then((response) => {
@@ -375,7 +376,7 @@ client.on('chat', function(channel, user, message, self) {
             currentDate.setMilliseconds(0);
             currentDate.setSeconds(0);
             currentDate.setMinutes(0);
-            const fetchPromise = fetch(lineup_url);
+            const fetchPromise = fetch(scheduling.lineup_url);
 
             fetchPromise
             .then((response) => {
