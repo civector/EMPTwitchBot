@@ -45,7 +45,7 @@ const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
 
 //test token
 
-var token_test = api_func.test_API_token(api_func.APIcred);
+//var token_test = api_func.test_API_token(api_func.APIcred);
 
 
 //tmi.js connection option
@@ -268,12 +268,14 @@ client.on('chat', function(channel, user, message, self) {
 
             getstreamurl = getstreamurl + "?user_login=" + handle;
 
+            var response = {};
+
             (async() => {
-                var response = await api_func.adv_fetch(getstreamurl);
+                response = await api_func.adv_fetch(getstreamurl);
             })()
             
             console.log(response);
-            
+
             fetch(getstreamurl, {
                 method: "GET",
                 headers:{
@@ -347,7 +349,7 @@ client.on('chat', function(channel, user, message, self) {
         //Lineup Response
         if(commandmessage.command == 'lineup'){
             var lineupmessage = "";
-            const fetchPromise = fetch(lineup_url);
+            const fetchPromise = fetch(chat_cmds.lineup_url);
 
             fetchPromise
             .then((response) => {
@@ -388,7 +390,7 @@ client.on('chat', function(channel, user, message, self) {
             currentDate.setMilliseconds(0);
             currentDate.setSeconds(0);
             currentDate.setMinutes(0);
-            const fetchPromise = fetch(lineup_url);
+            const fetchPromise = fetch(chat_cmd.lineup_url);
 
             fetchPromise
             .then((response) => {

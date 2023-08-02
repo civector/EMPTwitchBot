@@ -96,26 +96,27 @@ module.exports = {
         //var url_text = "https://api.twitch.tv/helix/streams";
         var input_method = "GET";
         var input_headers = {
-            "Authorization": api_func.APIcred.token,
-            "Client-Id": api_func.APIcred.client_id,
+            "Authorization": this.APIcred.token,
+            "Client-Id": this.APIcred.client_id,
         };
         var input_body = "";
         var hasbody = false;
+        var responsetype = 0;
         
         //check if input_body has length and is a string
-        if(typeof input_body === 'string' && myVariable.length > 0) {
+        if(typeof input_body === 'string' && input_body.length > 0) {
             hasbody = true;
         }
 
         //choose fetch method type
         if(input_method === "GET" && hasbody === false){
             //GET method
-            return await fetch(url_text, {
+            fetch(url_text, {
                 method: input_method,
-                headers: input_headers,
+                headers: input_headers
             })
             .then((response) => {
-                var responsetype = response.status;
+                responsetype = response.status;
                 console.log(responsetype);
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status}`);

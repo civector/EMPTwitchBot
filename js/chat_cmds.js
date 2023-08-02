@@ -20,12 +20,15 @@ let open_channels = fs.readFileSync(process.cwd() + '/data/channels.txt').toStri
 text = fs.readFileSync(process.cwd() + '/data/commands.json');
 let simple_commands = JSON.parse(text);
 
+const lineup_url = fs.readFileSync(process.cwd() + '/settings/lineup_url.txt').toString();
+
 module.exports = {
     bot_username,
     oauth,
     admins,
     open_channels,
     simple_commands,
+    lineup_url,
     //options,
 
     get_permissions: function(user){
