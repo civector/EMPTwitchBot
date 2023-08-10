@@ -90,18 +90,6 @@ client.on('chat', function(channel, user, message, self) {
     //If the message is formatted as a command, then check against commands
     if(is_command == true){
         //permission level calculation
-        /*var is_mod = false;
-        var is_admin = false;
-
-        if(user.mod == true){
-            is_mod = true;
-        }
-        if(chat_cmds.admins.indexOf(user.username)!=-1){
-            is_admin = true;
-            is_mod = true;
-        }
-        */
-        
         var perm  = chat_cmds.get_permissions(user);
 
         //create message object, with the command, and message
@@ -127,7 +115,7 @@ client.on('chat', function(channel, user, message, self) {
                 console.log("Join Successful/no errors: " + data);
             }).catch((err) =>{
                 //probably "No response from twitch"
-                console.log("Join error: " + data);
+                console.log("Join error: " + err);
             });
     
         }
@@ -390,7 +378,7 @@ client.on('chat', function(channel, user, message, self) {
             currentDate.setMilliseconds(0);
             currentDate.setSeconds(0);
             currentDate.setMinutes(0);
-            const fetchPromise = fetch(chat_cmd.lineup_url);
+            const fetchPromise = fetch(chat_cmds.lineup_url);
 
             fetchPromise
             .then((response) => {
