@@ -106,8 +106,6 @@ client.on('chat', function(channel, user, message, self) {
         //channel join
         if((commandmessage.command === "empjoin") && perm.admin){
             var join_channel = general.clean_handle(commandmessage.text);
-
-            console.log("joining " + join_channel + "...");
             client.say(channel, "joining " + join_channel + "...");
             client.join(join_channel)
             .then((data) =>{
@@ -307,8 +305,7 @@ client.on('chat', function(channel, user, message, self) {
                         var temp_token = await api_func.getToken();
                         api_func.token_info = temp_token;
                         api_func.APIcred.token = "Bearer " + api_func.token_info.access_token;
-                        client.say(channel, "/me *Yawns*");
-                        client.say(channel, "....Huh? Can you say that command again? I was taking a nap");
+                        client.say(channel, "Please repeat command");
                     })()
                     
                 }
@@ -323,16 +320,17 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //list basic commands
+        /*
+        "Commands" variable does not exist anymore 
         if(commandmessage.command === "list_basic"){
             var command_list = "";
 
             for (var i = 0; i < chat_cmds.simple_commands.length; i++) {
                 command_list = command_list + commands[i].command + ", ";
             }
-            console.log(command_list);
             client.say(channel, command_list);
-
         }
+        */
 	
         //Lineup Response
         if(commandmessage.command == 'lineup'){
@@ -457,7 +455,6 @@ client.on('chat', function(channel, user, message, self) {
                 return item.command == commandmessage.command;
         });
         if(command_index > -1){
-                console.log("Send command");
                 client.say(channel, chat_cmds.simple_commands[command_index].text);
         }
     }

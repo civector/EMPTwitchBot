@@ -39,7 +39,6 @@ module.exports = {
             "follower": false,
             "subscriber": false
         };
-        console.log(user);
         //broadcaster?
         if(user["room-id"] == user["user-id"]){
             permissions.broadcaster = true;
@@ -48,7 +47,6 @@ module.exports = {
         if(user.hasOwnProperty('user-type')){
             if(user["user-type"] === 'mod'){
                 permissions.moderator = true;
-                console.log('hello');
             }
         }
   
