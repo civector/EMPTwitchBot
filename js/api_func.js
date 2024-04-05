@@ -2,12 +2,12 @@
 var fs = require('fs');
 
 //Set list url for upcoming shows
-const lineup_url = fs.readFileSync(process.cwd() + '/settings/lineup_url.txt').toString();
+const lineup_url = fs.readFileSync(appRoot + '/settings/lineup_url.txt').toString();
 
-let text = fs.readFileSync(process.cwd() + '/settings/token.json');
+let text = fs.readFileSync(appRoot + '/settings/token.json');
 let token_info = JSON.parse(text);
 
-text = fs.readFileSync(process.cwd() + '/settings/client_info.json');
+text = fs.readFileSync(appRoot + '/settings/client_info.json');
 let client_info = JSON.parse(text);
 
 let  APIcred = {
@@ -55,7 +55,7 @@ module.exports = {
     getToken: async function(){
         //Load API Info
         var refresh_tkn = this.token_info.refresh_token;
-        //var text = fs.readFileSync(process.cwd() + '/settings/client_info.json');
+        //var text = fs.readFileSync(appRoot + '/settings/client_info.json');
         //var twitchAPI = JSON.parse(text);
         var twitchAPI = this.client_info;
 
@@ -80,7 +80,7 @@ module.exports = {
         })
         .then((data) => {
             var temp_data = JSON.stringify(data);
-            fs.writeFile(process.cwd() + '/settings/token.json', temp_data, (err) => {
+            fs.writeFile(appRoot + '/settings/token.json', temp_data, (err) => {
                 if (err) {
                     throw err;
                 }
@@ -160,7 +160,7 @@ module.exports = {
             })
             .then((data) => {
                 var temp_data = JSON.stringify(data);
-                fs.writeFile(process.cwd() + '/settings/token.json', temp_data, (err) => {
+                fs.writeFile(appRoot + '/settings/token.json', temp_data, (err) => {
                     if (err) {
                         throw err;
                     }

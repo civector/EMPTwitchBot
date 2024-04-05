@@ -9,14 +9,20 @@ Testing if this will change anything
 var tmi = require('tmi.js');
 var schedule = require('node-schedule');
 var fs = require('fs');
+var path = require('path');
 const { setegid } = require('process');
 const { Console } = require('console');
+
+global.appRoot = path.resolve(__dirname);
+console.log(global.appRoot);
 
 //local file "modules"
 const general = require('./js/general');
 const api_func = require('./js/api_func');
 const chat_cmds = require('./js/chat_cmds');
 const scheduling = require('./js/scheduling');
+
+
 
 
 //Purge function; to make sure the bot isn't in channels permanently

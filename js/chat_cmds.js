@@ -3,21 +3,21 @@ var fs = require('fs');
 
 //**Variable declaration and initialization**//
 //Bot Username
-const bot_username = fs.readFileSync(process.cwd() + '/settings/twitch_bot_channel.txt').toString();
+const bot_username = fs.readFileSync(appRoot + '/settings/twitch_bot_channel.txt').toString();
 
 //Oauth Token
-const oauth = fs.readFileSync(process.cwd() + '/settings/oauth.txt').toString();
+const oauth = fs.readFileSync(appRoot + '/settings/oauth.txt').toString();
 
 //Load lists for variable arrays
 // Bot Admins
-let text = fs.readFileSync(process.cwd() + '/data/admins.json');
+let text = fs.readFileSync(appRoot + '/data/admins.json');
 let admins = JSON.parse(text);
 
 //Channels for the bot to be in
-let open_channels = fs.readFileSync(process.cwd() + '/data/channels.txt').toString().split("\r\n");
+let open_channels = fs.readFileSync(appRoot + '/data/channels.txt').toString().split("\r\n");
 
 //Simple Command List
-text = fs.readFileSync(process.cwd() + '/data/commands.json');
+text = fs.readFileSync(appRoot + '/data/commands.json');
 let simple_commands = JSON.parse(text);
 
 
