@@ -9,26 +9,63 @@ const bot_username = fs.readFileSync(appRoot + '/settings/twitch_bot_channel.txt
 const oauth = fs.readFileSync(appRoot + '/settings/oauth.txt').toString();
 
 //Load lists for variable arrays
-// Bot Admins
-let text = fs.readFileSync(appRoot + '/data/admins.json');
-let admins = JSON.parse(text);
-
-//Channels for the bot to be in
-let open_channels = fs.readFileSync(appRoot + '/data/channels.txt').toString().split("\r\n");
-
-//Simple Command List
-text = fs.readFileSync(appRoot + '/data/commands.json');
-let simple_commands = JSON.parse(text);
-
-
+let admins = require('../data/admins.json');
+let simple_commands = require('../data/commands.json');
+let default_channels = require('../data/default_channels.json');
+let open_channels = require('../data/open_channels.json');
 
 module.exports = {
     bot_username,
     oauth,
     admins,
+    default_channels,
     open_channels,
     simple_commands,
-    //options,
+    full_channel_list: function(){
+        //combine both channel lists
+        const combined = [...default_channels, ...open_channels];
+        const returnlist = [...new Set(combined)];
+        console.log(returnlist);
+        return returnlist;
+    },
+
+    add_open_channels: function(channel_name){
+        console.log('channel to add: ' + channel_name);
+        open_channels.push(channel_name);
+        const jsonstring = JSON.stringify(open_channels);
+        console.log(jsonstring);
+        fs.writeFileSync(appRoot + '/data/open_channels.json', 'utf8', jsonstring, (err) => {
+            if (err){
+                console.error('An error occurred while writing open channel list JSON to file:', err);
+            } else {
+                console.log('open channel list JSON file has been saved.');
+            }
+        });
+    },
+
+    remove_open_channel: function(channel_name){
+        open_channels = open_channels.filter(item => item !== channel_name);
+        console.log(open_channels);
+        fs.writeFile(appRoot + '/data/open_channels.json', jsonstring, 'utf8', (err) => {
+            if (err){
+                console.error('An error occurred while writing open channel list JSON to file:', err);
+            } else {
+                console.log('open channel list JSON file has been saved.');
+            }
+        });
+    },
+
+    clear_open_channels: function(){
+        open_channels.length = 0;
+        const jsonstring = JSON.stringify(channel_name);
+        fs.writeFile(appRoot + '/data/open_channels.json', jsonstring, 'utf8', (err) => {
+            if (err){
+                console.error('An error occurred while writing open channel list JSON to file:', err);
+            } else {
+                console.log('open channel list JSON file has been saved.');
+            }
+        });
+    },
 
     get_permissions: function(user){
         var permissions= {

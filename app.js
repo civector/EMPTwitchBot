@@ -14,7 +14,6 @@ const { setegid } = require('process');
 const { Console } = require('console');
 
 global.appRoot = path.resolve(__dirname);
-console.log(global.appRoot);
 
 //local file "modules"
 const general = require('./js/general');
@@ -38,7 +37,9 @@ const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
         //probably "No response from twitch"
         console.log("disconnect error: " + err);
     });
-    
+
+    chat_cmds.clear_open_channels();
+        
     //join channels in allowed list
     client.connect()
     .then((data) =>{
@@ -55,6 +56,8 @@ const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
 //var token_test = api_func.test_API_token(api_func.APIcred);
 
 
+
+
 //tmi.js connection option
 var options = {
     options: {
@@ -68,7 +71,7 @@ var options = {
         username: chat_cmds.bot_username,
         password: chat_cmds.oauth
     },
-    channels: chat_cmds.open_channels
+    channels: chat_cmds.full_channel_list()
 };
 
 //begin chat connection 
@@ -81,6 +84,7 @@ client.connect()
     //probably "No response from twitch"
     console.log("Connect error: " + err);
 });
+
 
 //**Chat Commands**
 client.on('chat', function(channel, user, message, self) {
@@ -122,7 +126,9 @@ client.on('chat', function(channel, user, message, self) {
                 //probably "No response from twitch"
                 console.log("Join error: " + err);
             });
-    
+
+            //update open channel list
+            chat_cmds.add_open_channels(join_channel);
         }
 
         //channel leave
@@ -138,6 +144,8 @@ client.on('chat', function(channel, user, message, self) {
                 //probably "No response from twitch"
                 console.log("Leave error: " + data);
             });;
+
+            chat_cmds.remove_open_channel(join_channel);
         }
         
         //add basic command
