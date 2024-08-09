@@ -9,10 +9,10 @@ const bot_username = fs.readFileSync(appRoot + '/settings/twitch_bot_channel.txt
 const oauth = fs.readFileSync(appRoot + '/settings/oauth.txt').toString();
 
 //Load lists for variable arrays
-let admins = require('../data/admins.json');
-let simple_commands = require('../data/commands.json');
-let default_channels = require('../data/default_channels.json');
-let open_channels = require('../data/open_channels.json');
+let admins = require(appRoot + '/data/admins.json');
+let simple_commands = require(appRoot + '/data/commands.json');
+let default_channels = require(appRoot + '/data/default_channels.json');
+let open_channels = require(appRoot + '/data/open_channels.json');
 
 module.exports = {
     bot_username,
