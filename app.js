@@ -16,49 +16,14 @@ const { Console } = require('console');
 global.appRoot = path.resolve(__dirname);
 
 //local file "modules"
-const general = require('./js/general');
 const api_func = require('./js/api_func');
 const chat_cmds = require('./js/chat_cmds');
+const general = require('./js/general');
 const scheduling = require('./js/scheduling');
 
 
 
-
-//Purge function; to make sure the bot isn't in channels permanently
-//leave all current channels the bot is connected to, rejoins the channels in whitelist
-var purge_scheduler_time = new schedule.RecurrenceRule();
-purge_scheduler_time.hour = 4; 
-const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
-    console.log("Purging connected channels...");
-    client.disconnect()
-    .then((data) =>{
-        console.log("Disconnected successfully/no errors: " + data);
-    }).catch((err) =>{
-        //probably "No response from twitch"
-        console.log("disconnect error: " + err);
-    });
-
-    chat_cmds.clear_open_channels();
-        
-    //join channels in allowed list
-    client.connect()
-    .then((data) =>{
-        console.log("Connected successfully/no errors: " + data);
-    }).catch((err) =>{
-        //probably "No response from twitch"
-        console.log("connect error: " + err);
-    });
-    
-});
-
-//test token
-
-//var token_test = api_func.test_API_token(api_func.APIcred);
-
-
-
-
-//tmi.js connection option
+//tmi.js connection options
 var options = {
     options: {
         debug: true
@@ -91,15 +56,9 @@ client.on('chat', function(channel, user, message, self) {
 
     //messages from the bot are ignored
     if(self) return;
-    
-    //does the message have the command character (an exclamation point)?
-    var is_command = false;
-    if(message.startsWith("!")){
-        is_command = true;
-    }
 
     //If the message is formatted as a command, then check against commands
-    if(is_command == true){
+    if(message.startsWith("!")){
         //permission level calculation
         var perm  = chat_cmds.get_permissions(user);
 
@@ -475,7 +434,35 @@ client.on('chat', function(channel, user, message, self) {
     }
 });
 
+
 client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
     var token_test = api_func.test_API_token(api_func.APIcred);
+});
+
+//Purge function; to make sure the bot isn't in channels permanently
+//leave all current channels the bot is connected to, rejoins the channels in whitelist
+var purge_scheduler_time = new schedule.RecurrenceRule();
+purge_scheduler_time.hour = 4; 
+const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
+    console.log("Purging connected channels...");
+    client.disconnect()
+    .then((data) =>{
+        console.log("Disconnected successfully/no errors: " + data);
+    }).catch((err) =>{
+        //probably "No response from twitch"
+        console.log("disconnect error: " + err);
+    });
+
+    chat_cmds.clear_open_channels();
+        
+    //join channels in allowed list
+    client.connect()
+    .then((data) =>{
+        console.log("Connected successfully/no errors: " + data);
+    }).catch((err) =>{
+        //probably "No response from twitch"
+        console.log("connect error: " + err);
+    });
+    
 });

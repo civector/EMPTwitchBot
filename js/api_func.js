@@ -1,14 +1,8 @@
 //API variables and tokens
 var fs = require('fs');
 
-//Set list url for upcoming shows
-const lineup_url = fs.readFileSync(appRoot + '/settings/lineup_url.txt').toString();
-
-let text = fs.readFileSync(appRoot + '/settings/token.json');
-let token_info = JSON.parse(text);
-
-text = fs.readFileSync(appRoot + '/settings/client_info.json');
-let client_info = JSON.parse(text);
+let token_info = require(appRoot + '/settings/token.json');
+let client_info = require(appRoot + '/settings/client_info.json');
 
 let  APIcred = {
     client_id: client_info.client_id,
@@ -17,7 +11,6 @@ let  APIcred = {
 
 
 module.exports = {
-    lineup_url,
     token_info,
     client_info,
     APIcred,
