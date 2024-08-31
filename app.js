@@ -329,9 +329,9 @@ client.on('chat', function(channel, user, message, self) {
                         hour12: true,
                     });
                     if( i < (lineupnew.length - 1)){
-                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Name + ", ";
+                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Channel + ", ";
                     }else{
-                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Name;
+                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Channel;
                     }
                 }
                 client.say(channel, lineupmessage);
