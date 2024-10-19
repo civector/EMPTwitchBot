@@ -46,6 +46,8 @@ module.exports = {
     remove_open_channel: function(channel_name){
         open_channels = open_channels.filter(item => item !== channel_name);
         console.log(open_channels);
+        const jsonstring = JSON.stringify(open_channels);
+        console.log(jsonstring);
         fs.writeFile(appRoot + '/data/open_channels.json', jsonstring, 'utf8', (err) => {
             if (err){
                 console.error('An error occurred while writing open channel list JSON to file:', err);

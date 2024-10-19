@@ -92,19 +92,19 @@ client.on('chat', function(channel, user, message, self) {
 
         //channel leave
         if((commandmessage.command === "emppart") && perm.admin){
-            var join_channel = general.clean_handle(commandmessage.text);
+            var leave_channel = general.clean_handle(commandmessage.text);
 
-            client.say(channel, "leaving " + join_channel + "...");
-            client.part(join_channel)
+            client.say(channel, "leaving " + leave_channel + "...");
+            client.part(leave_channel)
             .then((data) =>{
                 //left successfully
                 console.log("Leave Successful/no errors: " + data);
             }).catch((err) =>{
                 //probably "No response from twitch"
-                console.log("Leave error: " + data);
+                console.log("Leave error");
             });;
 
-            chat_cmds.remove_open_channel(join_channel);
+            chat_cmds.remove_open_channel(leave_channel);
         }
         
         //add basic command
