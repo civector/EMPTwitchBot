@@ -309,7 +309,7 @@ client.on('chat', function(channel, user, message, self) {
         if(commandmessage.command === "roulette") {
             var intRandom;
             var RouletteResult=0;
-            intRandom = general.getRndInteger(0,5);
+            intRandom = general.getRndInteger(0,2);
             if(intRandom == 0){
                 RouletteResult = 1;
             }
