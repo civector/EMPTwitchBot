@@ -305,7 +305,23 @@ client.on('chat', function(channel, user, message, self) {
             client.say(channel, command_list);
         }
         */
-	
+       //Roulette Command
+        if(commandmessage.command === "roulette") {
+            var intRandom;
+            var RouletteResult=0;
+            intRandom = general.getRndInteger(0,5);
+            if(intRandom == 0){
+                RouletteResult = 1;
+            }
+
+            if(RouletteResult === 1){
+                client.say(channel, "Bang!! (I can't time you out yet; but just pretend that I can!");
+            }else{
+                client.say(channel, "/me spins the cylinder after pulling the trigger on an empty chamber");
+            }
+
+        }
+
         //Lineup Response
         if(commandmessage.command == 'lineup'){
             var lineupmessage = "";
