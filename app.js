@@ -72,6 +72,7 @@ client.on('chat', function(channel, user, message, self) {
             client.say(channel, "Check out @" + so_channel + "! https://twitch.tv/" + so_channel);
         }
 
+
         //**** admin only commands ****
         //channel join
         if((commandmessage.command === "empjoin") && perm.admin){
