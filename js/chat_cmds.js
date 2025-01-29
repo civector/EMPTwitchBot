@@ -28,7 +28,6 @@ module.exports = {
     admins,
     open_channels,
     simple_commands,
-    lineup_url,
     //options,
 
     get_permissions: function(user){

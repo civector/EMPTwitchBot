@@ -44,6 +44,11 @@ const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
     
 });
 
+//test token
+
+//var token_test = api_func.test_API_token(api_func.APIcred);
+
+
 //tmi.js connection option
 var options = {
     options: {
@@ -65,6 +70,7 @@ var client = new tmi.client(options);
 client.connect()
 .then((data) =>{
     console.log("Connected successfully/no errors: " + data);
+    var token_test = api_func.test_API_token(api_func.APIcred);
 }).catch((err) =>{
     //probably "No response from twitch"
     console.log("Connect error: " + err);
@@ -85,18 +91,6 @@ client.on('chat', function(channel, user, message, self) {
     //If the message is formatted as a command, then check against commands
     if(is_command == true){
         //permission level calculation
-        /*var is_mod = false;
-        var is_admin = false;
-
-        if(user.mod == true){
-            is_mod = true;
-        }
-        if(chat_cmds.admins.indexOf(user.username)!=-1){
-            is_admin = true;
-            is_mod = true;
-        }
-        */
-        
         var perm  = chat_cmds.get_permissions(user);
 
         //create message object, with the command, and message
@@ -122,7 +116,7 @@ client.on('chat', function(channel, user, message, self) {
                 console.log("Join Successful/no errors: " + data);
             }).catch((err) =>{
                 //probably "No response from twitch"
-                console.log("Join error: " + data);
+                console.log("Join error: " + err);
             });
     
         }
@@ -263,6 +257,14 @@ client.on('chat', function(channel, user, message, self) {
 
             getstreamurl = getstreamurl + "?user_login=" + handle;
 
+            var response = {};
+
+            (async() => {
+                response = await api_func.adv_fetch(getstreamurl);
+            })()
+            
+            console.log(response);
+
             fetch(getstreamurl, {
                 method: "GET",
                 headers:{
@@ -302,7 +304,8 @@ client.on('chat', function(channel, user, message, self) {
 
                 if(responsetype === 401){
                     (async() => {
-                        var temp_token = await api_func.getToken(api_func.token_info.refresh_token);
+                        //var temp_token = await api_func.getToken(api_func.token_info.refresh_token);
+                        var temp_token = await api_func.getToken();
                         api_func.token_info = temp_token;
                         api_func.APIcred.token = "Bearer " + api_func.token_info.access_token;
                         client.say(channel, "/me *Yawns*");
@@ -463,4 +466,5 @@ client.on('chat', function(channel, user, message, self) {
 
 client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
+    var token_test = api_func.test_API_token(api_func.APIcred);
 });
