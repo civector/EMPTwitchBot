@@ -9,47 +9,21 @@ Testing if this will change anything
 var tmi = require('tmi.js');
 var schedule = require('node-schedule');
 var fs = require('fs');
+var path = require('path');
 const { setegid } = require('process');
 const { Console } = require('console');
 
+global.appRoot = path.resolve(__dirname);
+
 //local file "modules"
-const general = require('./js/general');
 const api_func = require('./js/api_func');
 const chat_cmds = require('./js/chat_cmds');
+const general = require('./js/general');
 const scheduling = require('./js/scheduling');
 
 
-//Purge function; to make sure the bot isn't in channels permanently
-//leave all current channels the bot is connected to, rejoins the channels in whitelist
-var purge_scheduler_time = new schedule.RecurrenceRule();
-purge_scheduler_time.hour = 4; 
-const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
-    console.log("Purging connected channels...");
-    client.disconnect()
-    .then((data) =>{
-        console.log("Disconnected successfully/no errors: " + data);
-    }).catch((err) =>{
-        //probably "No response from twitch"
-        console.log("disconnect error: " + err);
-    });
-    
-    //join channels in allowed list
-    client.connect()
-    .then((data) =>{
-        console.log("Connected successfully/no errors: " + data);
-    }).catch((err) =>{
-        //probably "No response from twitch"
-        console.log("connect error: " + err);
-    });
-    
-});
 
-//test token
-
-//var token_test = api_func.test_API_token(api_func.APIcred);
-
-
-//tmi.js connection option
+//tmi.js connection options
 var options = {
     options: {
         debug: true
@@ -62,7 +36,7 @@ var options = {
         username: chat_cmds.bot_username,
         password: chat_cmds.oauth
     },
-    channels: chat_cmds.open_channels
+    channels: chat_cmds.full_channel_list()
 };
 
 //begin chat connection 
@@ -76,20 +50,15 @@ client.connect()
     console.log("Connect error: " + err);
 });
 
+
 //**Chat Commands**
 client.on('chat', function(channel, user, message, self) {
 
     //messages from the bot are ignored
     if(self) return;
-    
-    //does the message have the command character (an exclamation point)?
-    var is_command = false;
-    if(message.startsWith("!")){
-        is_command = true;
-    }
 
     //If the message is formatted as a command, then check against commands
-    if(is_command == true){
+    if(message.startsWith("!")){
         //permission level calculation
         var perm  = chat_cmds.get_permissions(user);
 
@@ -103,12 +72,11 @@ client.on('chat', function(channel, user, message, self) {
             client.say(channel, "Check out @" + so_channel + "! https://twitch.tv/" + so_channel);
         }
 
+
         //**** admin only commands ****
         //channel join
         if((commandmessage.command === "empjoin") && perm.admin){
             var join_channel = general.clean_handle(commandmessage.text);
-
-            console.log("joining " + join_channel + "...");
             client.say(channel, "joining " + join_channel + "...");
             client.join(join_channel)
             .then((data) =>{
@@ -118,22 +86,26 @@ client.on('chat', function(channel, user, message, self) {
                 //probably "No response from twitch"
                 console.log("Join error: " + err);
             });
-    
+
+            //update open channel list
+            chat_cmds.add_open_channels(join_channel);
         }
 
         //channel leave
         if((commandmessage.command === "emppart") && perm.admin){
-            var join_channel = general.clean_handle(commandmessage.text);
+            var leave_channel = general.clean_handle(commandmessage.text);
 
-            client.say(channel, "leaving " + join_channel + "...");
-            client.part(join_channel)
+            client.say(channel, "leaving " + leave_channel + "...");
+            client.part(leave_channel)
             .then((data) =>{
                 //left successfully
                 console.log("Leave Successful/no errors: " + data);
             }).catch((err) =>{
                 //probably "No response from twitch"
-                console.log("Leave error: " + data);
+                console.log("Leave error");
             });;
+
+            chat_cmds.remove_open_channel(leave_channel);
         }
         
         //add basic command
@@ -308,8 +280,7 @@ client.on('chat', function(channel, user, message, self) {
                         var temp_token = await api_func.getToken();
                         api_func.token_info = temp_token;
                         api_func.APIcred.token = "Bearer " + api_func.token_info.access_token;
-                        client.say(channel, "/me *Yawns*");
-                        client.say(channel, "....Huh? Can you say that command again? I was taking a nap");
+                        client.say(channel, "Please repeat command");
                     })()
                     
                 }
@@ -324,17 +295,34 @@ client.on('chat', function(channel, user, message, self) {
         }
 
         //list basic commands
+        /*
+        "Commands" variable does not exist anymore 
         if(commandmessage.command === "list_basic"){
             var command_list = "";
 
             for (var i = 0; i < chat_cmds.simple_commands.length; i++) {
                 command_list = command_list + commands[i].command + ", ";
             }
-            console.log(command_list);
             client.say(channel, command_list);
+        }
+        */
+       //Roulette Command
+        if(commandmessage.command === "roulette") {
+            var intRandom;
+            var RouletteResult=0;
+            intRandom = general.getRndInteger(0,2);
+            if(intRandom == 0){
+                RouletteResult = 1;
+            }
+
+            if(RouletteResult === 1){
+                client.say(channel, "Bang!! (I can't time you out yet; but just pretend that I can!");
+            }else{
+                client.say(channel, "/me spins the cylinder after pulling the trigger on an empty chamber");
+            }
 
         }
-	
+
         //Lineup Response
         if(commandmessage.command == 'lineup'){
             var lineupmessage = "";
@@ -358,9 +346,9 @@ client.on('chat', function(channel, user, message, self) {
                         hour12: true,
                     });
                     if( i < (lineupnew.length - 1)){
-                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Name + ", ";
+                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Channel + ", ";
                     }else{
-                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Name;
+                        lineupmessage = lineupmessage + lineup_time + " → " + lineupnew[i].DJ_Channel;
                     }
                 }
                 client.say(channel, lineupmessage);
@@ -458,13 +446,40 @@ client.on('chat', function(channel, user, message, self) {
                 return item.command == commandmessage.command;
         });
         if(command_index > -1){
-                console.log("Send command");
                 client.say(channel, chat_cmds.simple_commands[command_index].text);
         }
     }
 });
 
+
 client.on('connected', function(address, port) {
     console.log("Address: " + address + " Port: " + port);
     var token_test = api_func.test_API_token(api_func.APIcred);
+});
+
+//Purge function; to make sure the bot isn't in channels permanently
+//leave all current channels the bot is connected to, rejoins the channels in whitelist
+var purge_scheduler_time = new schedule.RecurrenceRule();
+purge_scheduler_time.hour = 4; 
+const purge_scheduler = schedule.scheduleJob(purge_scheduler_time, function(){
+    console.log("Purging connected channels...");
+    client.disconnect()
+    .then((data) =>{
+        console.log("Disconnected successfully/no errors: " + data);
+    }).catch((err) =>{
+        //probably "No response from twitch"
+        console.log("disconnect error: " + err);
+    });
+
+    chat_cmds.clear_open_channels();
+        
+    //join channels in allowed list
+    client.connect()
+    .then((data) =>{
+        console.log("Connected successfully/no errors: " + data);
+    }).catch((err) =>{
+        //probably "No response from twitch"
+        console.log("connect error: " + err);
+    });
+    
 });
